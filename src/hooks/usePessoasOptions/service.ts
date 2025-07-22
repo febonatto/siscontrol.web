@@ -1,0 +1,13 @@
+import { api } from '@/configs/httpClient';
+import { AxiosResponse } from 'axios';
+
+interface PessoaOption {
+  id: number;
+  nomeCompleto: string;
+}
+
+export type GetPessoasOptionsResponse = AxiosResponse<PessoaOption[]>;
+
+export function getPessoasOptions(): Promise<GetPessoasOptionsResponse> {
+  return api.get('/pessoas/options');
+}
