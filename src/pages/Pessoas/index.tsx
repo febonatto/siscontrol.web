@@ -85,7 +85,11 @@ export function Pessoas() {
                       <TableCell>{emailCorporativo}</TableCell>
                       <TableCell>{telefoneCorporativo}</TableCell>
                       <TableCell>{cidade}</TableCell>
-                      <TableCell>{tempoExperiencia}</TableCell>
+                      <TableCell>
+                        {tempoExperiencia
+                          ? (tempoExperiencia / 365).toFixed(2)
+                          : ''}
+                      </TableCell>
                       <TableCell>
                         <Button
                           variant="custom"

@@ -15,6 +15,10 @@ import { PartidasOrcamentariasForm } from './pages/PartidasOrcamentarias/Form';
 import { AlterarSenha } from './pages/AlterarSenha';
 import { RecuperarSenha } from './pages/RecuperarSenha';
 import { RedefinirSenha } from './pages/RedefinirSenha';
+import { BoletimMedicao } from './pages/BoletimMedicao/Resumos';
+import { BoletimMedicaoDetalhes } from './pages/BoletimMedicao/Detalhes';
+import { BoletimMedicaoResumoForm } from './pages/BoletimMedicao/Resumos/Form';
+import { BoletimMedicaoDetalhesForm } from './pages/BoletimMedicao/Detalhes/Form';
 
 export function ApplicationRoutes() {
   return (
@@ -62,6 +66,19 @@ export function ApplicationRoutes() {
             <Route
               path="atualizar/:partidaOrcamentariaId"
               element={<PartidasOrcamentariasForm />}
+            />
+          </Route>
+          <Route path="boletim-medicao">
+            <Route index element={<BoletimMedicao />} />
+            <Route path=":idBm" element={<BoletimMedicaoDetalhes />} />
+            <Route
+              path=":idBm/editar/:idDetalhe"
+              element={<BoletimMedicaoDetalhesForm />}
+            />
+            <Route path="criar" element={<BoletimMedicaoResumoForm />} />
+            <Route
+              path="atualizar/:id"
+              element={<BoletimMedicaoResumoForm />}
             />
           </Route>
         </Route>

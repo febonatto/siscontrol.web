@@ -161,28 +161,6 @@ export function PartidasOrcamentariasForm() {
           />
         </div>
 
-        <div className="col-span-3">
-          <Input.Text
-            control={control}
-            name="multaBaixaExperiencia"
-            label="Multa por Baixa Experiência"
-            onlyNumbers
-            applyMask={coinMask}
-            disabled={isFieldsDisabled}
-          />
-        </div>
-
-        <div className="col-span-3">
-          <Input.Text
-            control={control}
-            name="multaAtraso"
-            label="Multa por Atraso"
-            onlyNumbers
-            applyMask={coinMask}
-            disabled={isFieldsDisabled}
-          />
-        </div>
-
         <Separator className="col-span-12 my-3" />
 
         <div className="col-span-6">

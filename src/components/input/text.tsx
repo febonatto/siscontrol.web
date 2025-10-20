@@ -45,7 +45,7 @@ export function InputText<T extends FieldValues>({
 
     let { value } = event.target;
     if (onlyNumbers) {
-      value = value.replace(/(?!^)-|[^\d-]/g, '');
+      value = value.replace(/(?!^)-|[^\d-.]/g, '');
     }
     if (applyMask) {
       value = applyMask(value);

@@ -103,8 +103,6 @@ export function usePartidasOrcamentariasForm() {
     quantidadePessoas,
     quantidadeMeses,
     precoUnitario,
-    multaAtraso,
-    multaBaixaExperiencia,
     aeroporto,
     pessoaPartida,
     currentMobilizedPessoa,
@@ -128,10 +126,6 @@ export function usePartidasOrcamentariasForm() {
     quantidadePessoas: quantidadePessoas ? String(quantidadePessoas) : '',
     quantidadeMeses: quantidadeMeses ? String(quantidadeMeses) : '',
     precoUnitario: precoUnitario ? coinMask(String(precoUnitario), true) : '',
-    multaAtraso: multaAtraso ? coinMask(String(multaAtraso), true) : '',
-    multaBaixaExperiencia: multaBaixaExperiencia
-      ? coinMask(String(multaBaixaExperiencia), true)
-      : '',
     pessoaPartida: {
       pessoaId: pessoaId ? String(pessoaId) : '',
       dataMobilizacaoReal: dataMobilizacaoReal

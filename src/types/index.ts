@@ -155,8 +155,6 @@ export interface PartidaOrcamentaria {
   quantidadeMeses: number;
   precoUnitario: number;
   montanteContratual: number;
-  multaAtraso: number;
-  multaBaixaExperiencia: number;
   criadoEm: Date;
   atualizadoEm: Date;
 
@@ -165,4 +163,52 @@ export interface PartidaOrcamentaria {
   currentMobilizedPessoa: PessoaPartida | null;
 
   pessoa: Pessoa;
+}
+
+export interface BmResumo {
+  id: number;
+  nrBm: number;
+  periodoMedicaoInicial: string;
+  periodoMedicaoFinal: string;
+  vlTotalMedicaoSemPenalizacao: number;
+  vlTotalMultaExperiencia: number;
+  vlTotalMultaMobilizacao: number;
+  qualidadeEntregaveis: number;
+  revisaoQualidadeEntregavelProjeto: number;
+  qualidadePrazoEntregaveis: number;
+  qualidadeSupervisaoObra: number;
+  qualidadeDfo: number;
+  qualidadeSegurancaOperacional: number;
+  qualidadeServico: number;
+  vlTotalMedicaoComPenalizacao: number;
+  indiceReajusteAcumulado: number;
+  vlReajuste: number;
+  vlMedicaoReajustado: number;
+  vlRetencao: number;
+  vlNotaFiscal: number;
+}
+
+export interface BmDetalhe {
+  id: number;
+  idBm: number;
+  vlMedicaoPartidaOrcamentaria: number;
+  qtdMesTrabalho: number;
+  vlMedicaoBm: number;
+  tempoExperienciaPessoa: number;
+  diferencaExperiencia: number;
+  vlMultaExperiencia: number;
+  diasMobilizacao: number;
+  percentualMobilizacao: number;
+  dataMobilizacaoReal: DateISO | null;
+  dataDesmobilizacaoReal: DateISO | null;
+  vlMultaMobilizacao: number;
+  vlMedicaoReal: number;
+
+  partidaOrcamentaria: Pick<
+    PartidaOrcamentaria,
+    'id' | 'codigo' | 'servico' | 'dataMobilizacaoPrevista' | 'aeroporto'
+  > &
+    Pick<Aeroporto, 'nome'>;
+
+  pessoa?: Pick<Pessoa, 'id' | 'nomeReduzido'>;
 }

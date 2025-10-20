@@ -15,10 +15,6 @@ export function RedirectHome() {
   const linksSistemas = [
     { label: 'Processos CESG', href: 'https://bpm.hemeragestao.com/#list' },
     {
-      label: 'Sistema de Controle',
-      href: '/siscontrol',
-    },
-    {
       label: 'Gestão de Cronograma',
       href: 'https://verax.hemeragestao.com/login',
     },
@@ -42,12 +38,20 @@ export function RedirectHome() {
     <section className="mx-auto flex h-screen max-w-[75%] gap-4 py-10">
       <div className="flex min-w-[30%] flex-col space-y-4 py-4">
         <div>
-          <h1 className="text-lg font-bold">Sistemas</h1>
+          <Link to="/siscontrol">
+            <h1 className="text-2xl font-bold">Siscontrol</h1>
+          </Link>
+        </div>
+
+        <Separator orientation="horizontal" />
+
+        <div>
+          <h1 className="text-2xl font-bold">Sistemas</h1>
           {linksSistemas.map((link) => (
             <div key={link.label} className="font-medium">
               <Link
                 to={link.href}
-                className="text-start text-sm text-gray-500 hover:text-gray-900"
+                className="text-start text-gray-500 hover:text-gray-900"
               >
                 {link.label}
               </Link>
@@ -72,12 +76,12 @@ export function RedirectHome() {
               <Separator orientation="horizontal" />
 
               <div>
-                <h1 className="text-lg font-bold">Relatórios PowerBI</h1>
+                <h1 className="text-2xl font-bold">Relatórios PowerBI</h1>
                 {relatoryLinks.map((link) => (
                   <div key={link.label} className="font-medium">
                     <Link
                       to={link.href}
-                      className="text-start text-sm text-gray-500 hover:text-gray-900"
+                      className="text-start text-gray-500 hover:text-gray-900"
                     >
                       {link.label}
                     </Link>

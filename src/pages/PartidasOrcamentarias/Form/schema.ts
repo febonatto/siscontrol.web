@@ -65,40 +65,6 @@ export const partidaOrcamentariaSchema = z
         }, 'O salário deve ser positivo')
         .nullable(),
     ),
-    multaAtraso: z.preprocess(
-      (value) => (value === '' ? null : value),
-      z
-        .string()
-        .regex(
-          /^R\$\s?\d{1,8}(\.\d{3})*(,\d{2})?$/,
-          'A multa por atraso deve conter apenas números',
-        )
-        .refine((value) => {
-          const replacedValue = value
-            .replace(/[R\$\s\u00A0]/g, '')
-            .replace(/\./g, '')
-            .replace(',', '.');
-          return Number(replacedValue) > 0;
-        }, 'A multa por atraso deve ser positivo')
-        .nullable(),
-    ),
-    multaBaixaExperiencia: z.preprocess(
-      (value) => (value === '' ? null : value),
-      z
-        .string()
-        .regex(
-          /^R\$\s?\d{1,8}(\.\d{3})*(,\d{2})?$/,
-          'A multa por baixa experiência deve conter apenas números',
-        )
-        .refine((value) => {
-          const replacedValue = value
-            .replace(/[R\$\s\u00A0]/g, '')
-            .replace(/\./g, '')
-            .replace(',', '.');
-          return Number(replacedValue) > 0;
-        }, 'A multa por baixa experiência deve ser positivo')
-        .nullable(),
-    ),
     pessoaPartida: z
       .object({
         pessoaId: z.preprocess(

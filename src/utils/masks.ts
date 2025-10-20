@@ -21,27 +21,29 @@ export function coinMask(
   value: string | null,
   onlyConvertion?: boolean,
 ): string {
-  if (!value) {
-    return '';
-  }
+  if (!value) return '';
 
-  const valueAsNumber = Number(value);
-  const isInteger = Number.isInteger(valueAsNumber);
+  // Detecta se é negativo
+  const isNegative = value.trim().startsWith('-');
 
+  // Remove tudo que não é dígito
   const onlyDigitsValue = value.replace(/\D/g, '');
-  const shouldTransformEmpty = /^0+$/.test(onlyDigitsValue);
 
-  if (!onlyDigitsValue || shouldTransformEmpty) {
-    return '';
-  }
+  // 🔹 Se o usuário apagou tudo, retorna vazio
+  if (!onlyDigitsValue.length) return isNegative ? '-' : '';
 
+  // Limita o tamanho e cria o número base
   const nextValue = onlyDigitsValue.substring(0, 10);
-  const floatValue =
-    isInteger && onlyConvertion
-      ? parseFloat(nextValue)
-      : parseFloat(nextValue) / 100;
 
-  return floatValue.toLocaleString('pt-BR', {
+  // Converte pra float considerando 2 casas decimais
+  const floatValue = onlyConvertion
+    ? parseFloat(nextValue)
+    : parseFloat(nextValue) / 100;
+
+  // Aplica o sinal negativo se existir
+  const finalValue = isNegative ? -floatValue : floatValue;
+
+  return finalValue.toLocaleString('pt-BR', {
     style: 'currency',
     currency: 'BRL',
   });

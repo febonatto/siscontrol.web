@@ -9,6 +9,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { Link } from 'react-router';
 import {
@@ -38,7 +41,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const nome = auth?.pessoa.nome;
   const email = auth?.pessoa.email;
 
-  const showColaboradoresOrPartidasOrcamentarias =
+  const showColaboradoresOrPartidasOrcamentariasOrBoletimMedicao =
     nivelPermissao === PersonRoles.PMO_WITH_BI ||
     nivelPermissao === PersonRoles.PMO_WITHOUT_BI ||
     nivelPermissao === PersonRoles.BOAB_WITH_BI ||
@@ -54,7 +57,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
-            {showColaboradoresOrPartidasOrcamentarias && (
+            {showColaboradoresOrPartidasOrcamentariasOrBoletimMedicao && (
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link to="/siscontrol/pessoas">
@@ -84,7 +87,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </SidebarMenuButton>
             </SidebarMenuItem>
 
-            {showColaboradoresOrPartidasOrcamentarias && (
+            {showColaboradoresOrPartidasOrcamentariasOrBoletimMedicao && (
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link to="/siscontrol/partidas-orcamentarias">
@@ -94,17 +97,34 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </SidebarMenuItem>
             )}
 
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link to="#">Boletim de Medição</Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {showColaboradoresOrPartidasOrcamentariasOrBoletimMedicao && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/siscontrol/boletim-medicao">
+                    Boletim de Medição
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
 
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link to="#">Relatórios</Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {nivelPermissao === PersonRoles.PMO_WITH_BI && (
+              <SidebarMenuItem>
+                <SidebarMenuButton>Relatórios</SidebarMenuButton>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton>
+                      <Link
+                        className="w-full"
+                        to="https://app.powerbi.com/groups/c2fe2197-62cf-4349-bb38-7ddbd958cdd0/reports/27a589ba-d7f3-4499-b7ec-ed7544611fd4/3b05a611aee98be10019?experience=power-bi"
+                        target="_blank"
+                      >
+                        Relatório BI
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </SidebarMenuItem>
+            )}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>

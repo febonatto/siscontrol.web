@@ -113,7 +113,7 @@ export function ExperienciasPessoa() {
                           {responsabilidades}
                         </span>
                       </TableCell>
-                      <TableCell>{tempoCargo}</TableCell>
+                      <TableCell>{(tempoCargo / 365).toFixed(2)}</TableCell>
                       <TableCell className="space-x-2">
                         <Button
                           variant="custom"
