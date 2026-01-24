@@ -9,7 +9,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { InfoIcon, Link2Icon } from 'lucide-react';
-import { cnpjMask, coinMask, zipCodeMask } from '@/utils/masks';
+import { cnpjMask, zipCodeMask } from '@/utils/masks';
 import { Link } from 'react-router';
 import { cn } from '@/lib/utils';
 
@@ -324,22 +324,18 @@ export function PessoaForm() {
             </div>
           )}
           <div className="col-span-4">
-            <Input.Text
+            <Input.Currency
               control={control}
               name="remuneracao"
               label="Remuneração"
-              onlyNumbers
-              applyMask={coinMask}
               disabled={isFieldsDisabled}
             />
           </div>
           <div className="col-span-4">
-            <Input.Text
+            <Input.Currency
               control={control}
               name="remuneracaoPactuada"
               label="Remuneração Pactuada"
-              onlyNumbers
-              applyMask={coinMask}
               disabled={isFieldsDisabled}
             />
           </div>

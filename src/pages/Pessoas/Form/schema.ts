@@ -1,4 +1,5 @@
 import { EstadoCivil, Genero, TipoContratacao } from '@/types';
+import { currency } from '@/validators/currency';
 import { z } from 'zod';
 
 export const pessoaSchema = z
@@ -136,40 +137,8 @@ export const pessoaSchema = z
         .max(50, 'O campo excede a quantidade máxima de 50 caracteres')
         .nullable(),
     ),
-    remuneracao: z.preprocess(
-      (value) => (value === '' ? null : value),
-      z
-        .string()
-        .regex(
-          /^R\$\s?\d{1,8}(\.\d{3})*(,\d{2})?$/,
-          'O campo deve conter apenas números',
-        )
-        .refine((value) => {
-          const replacedValue = value
-            .replace(/[R\$\s\u00A0]/g, '')
-            .replace(/\./g, '')
-            .replace(',', '.');
-          return Number(replacedValue) > 0;
-        }, 'O campo deve ser positivo')
-        .nullable(),
-    ),
-    remuneracaoPactuada: z.preprocess(
-      (value) => (value === '' ? null : value),
-      z
-        .string()
-        .regex(
-          /^R\$\s?\d{1,8}(\.\d{3})*(,\d{2})?$/,
-          'O campo deve conter apenas números',
-        )
-        .refine((value) => {
-          const replacedValue = value
-            .replace(/[R\$\s\u00A0]/g, '')
-            .replace(/\./g, '')
-            .replace(',', '.');
-          return Number(replacedValue) > 0;
-        }, 'O campo deve ser positivo')
-        .nullable(),
-    ),
+    remuneracao: currency({ optional: true }),
+    remuneracaoPactuada: currency({ optional: true }),
     regimeContratacao: z.preprocess(
       (value) => (value === '' ? null : value),
       z.nativeEnum(TipoContratacao).nullable(),

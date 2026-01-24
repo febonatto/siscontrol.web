@@ -7,13 +7,14 @@ import { createPessoa, getPessoa, updatePessoa } from './service';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { cnpjMask, coinMask, zipCodeMask } from '@/utils/masks';
+import { cnpjMask, zipCodeMask } from '@/utils/masks';
 import { toast } from 'sonner';
 import { toDate } from '@/utils/dates';
 import { PESSOA_LIST_KEY } from '../usePessoa';
 import { PESSOA_OPTIONS_LIST_KEY } from '@/hooks/usePessoasOptions';
 import { useAuth } from '@/contexts/AuthProvider';
 import { useEffect } from 'react';
+import { transformCurrency } from '@/utils/string';
 
 export const PESSOA_BEING_EDITED_TOKEN = '@siscontrol::pessoa/being-edited';
 
@@ -172,10 +173,8 @@ export function usePessoaForm() {
     tamanhoSapato: tamanhoSapato ? String(tamanhoSapato) : '',
     tamanhoCamisa: tamanhoCamisa ?? '',
     funcao: funcao ?? '',
-    remuneracao: remuneracao ? coinMask(String(remuneracao), true) : '',
-    remuneracaoPactuada: remuneracaoPactuada
-      ? coinMask(String(remuneracaoPactuada), true)
-      : '',
+    remuneracao: transformCurrency(remuneracao),
+    remuneracaoPactuada: transformCurrency(remuneracaoPactuada),
     regimeContratacao: regimeContratacao ?? null,
     cnpj: cnpj ? cnpjMask(cnpj) : '',
     nomeEmpresa: nomeEmpresa ?? '',

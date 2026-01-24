@@ -83,8 +83,8 @@ export interface Pessoa {
   tamanhoCamisa: string | null;
   funcao: string | null;
   regimeContratacao: TipoContratacao;
-  remuneracao: number | null;
-  remuneracaoPactuada: number | null;
+  remuneracao: string | null;
+  remuneracaoPactuada: string | null;
   cnpj: string | null;
   nomeEmpresa: string | null;
   dataContratacao: DateISO | null;
@@ -153,7 +153,7 @@ export interface PartidaOrcamentaria {
   dataDesmobilizacaoPrevista: DateISO;
   quantidadePessoas: number;
   quantidadeMeses: number;
-  precoUnitario: number;
+  precoUnitario: string;
   montanteContratual: number;
   criadoEm: Date;
   atualizadoEm: Date;

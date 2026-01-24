@@ -17,13 +17,13 @@ import { useAeroportoOptions } from '@/hooks/useAeroportoOptions';
 import { partidaOrcamentariaSchema } from './schema';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { coinMask } from '@/utils/masks';
 import { toast } from 'sonner';
 import { usePessoasOptions } from '@/hooks/usePessoasOptions';
 import { toDate } from '@/utils/dates';
 import { useAuth } from '@/contexts/AuthProvider';
 import { PersonRoles } from '@/types';
 import { useEffect } from 'react';
+import { transformCurrency } from '@/utils/string';
 
 export const PARTIDA_ORCAMENTARIA_UNIQUE_KEY = 'partida-orcamentaria';
 
@@ -111,8 +111,6 @@ export function usePartidasOrcamentariasForm() {
   const { pessoa, dataMobilizacaoReal } = currentMobilizedPessoa || {};
   const { id: pessoaId } = pessoa || {};
 
-  console.log({ currentPartidaOrcamentaria });
-
   const initialValues: PartidaOrcamentariaForm = {
     aeroportoId: aeroportoId ? String(aeroportoId) : '',
     codigo: codigo || '',
@@ -125,7 +123,7 @@ export function usePartidasOrcamentariasForm() {
       : null,
     quantidadePessoas: quantidadePessoas ? String(quantidadePessoas) : '',
     quantidadeMeses: quantidadeMeses ? String(quantidadeMeses) : '',
-    precoUnitario: precoUnitario ? coinMask(String(precoUnitario), true) : '',
+    precoUnitario: transformCurrency(precoUnitario),
     pessoaPartida: {
       pessoaId: pessoaId ? String(pessoaId) : '',
       dataMobilizacaoReal: dataMobilizacaoReal

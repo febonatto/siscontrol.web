@@ -1,3 +1,4 @@
+import { currency } from '@/validators/currency';
 import { z } from 'zod';
 
 export const partidaOrcamentariaSchema = z
@@ -48,23 +49,7 @@ export const partidaOrcamentariaSchema = z
         )
         .nullable(),
     ),
-    precoUnitario: z.preprocess(
-      (value) => (value === '' ? null : value),
-      z
-        .string()
-        .regex(
-          /^R\$\s?\d{1,8}(\.\d{3})*(,\d{2})?$/,
-          'O salário deve conter apenas números',
-        )
-        .refine((value) => {
-          const replacedValue = value
-            .replace(/[R\$\s\u00A0]/g, '')
-            .replace(/\./g, '')
-            .replace(',', '.');
-          return Number(replacedValue) > 0;
-        }, 'O salário deve ser positivo')
-        .nullable(),
-    ),
+    precoUnitario: currency({ optional: true }),
     pessoaPartida: z
       .object({
         pessoaId: z.preprocess(

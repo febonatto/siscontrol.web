@@ -1,7 +1,6 @@
 import { AuthLayout } from '@/layouts/auth-layout';
 import { useBoletimMedicaoResumosForm } from './useBoletimMedicaoResumosForm';
 import { Input } from '@/components/input';
-import { coinMask } from '@/utils/masks';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,9 +16,7 @@ export function BoletimMedicaoResumoForm() {
   const {
     breadcrumbItems,
     control,
-    isEditionPage,
     isCreatingResumo,
-    showFetchingResumo,
     showConfirmationDeletion,
     handleSubmit,
     onSubmit,
@@ -50,29 +47,14 @@ export function BoletimMedicaoResumoForm() {
             name="nrBm"
             label="Boletim de Medição"
             onlyNumbers
-            disabled={showFetchingResumo || isEditionPage}
           />
         </div>
-
-        {isEditionPage && (
-          <div className="col-span-2">
-            <Input.Date
-              control={control}
-              name="periodoMedicaoInicial"
-              label="Período de Medição Inicial"
-              disabled={showFetchingResumo || isEditionPage}
-            />
-          </div>
-        )}
 
         <div className="col-span-4">
           <Input.Date
             control={control}
             name="periodoMedicaoFinal"
-            label={
-              isEditionPage ? 'Período de Medição Final' : 'Período de Medição'
-            }
-            disabled={showFetchingResumo || isEditionPage}
+            label="Período de Medição"
           />
         </div>
 
@@ -82,107 +64,8 @@ export function BoletimMedicaoResumoForm() {
             name="indiceReajusteAcumulado"
             label="Indíce de Reajuste Acumulado"
             onlyNumbers
-            disabled={showFetchingResumo || isEditionPage}
           />
         </div>
-
-        {isEditionPage && (
-          <div className="col-span-3">
-            <Input.Text
-              control={control}
-              name="vlTotalMedicaoSemPenalizacao"
-              label="Valor da Medição sem Penalização"
-              disabled={showFetchingResumo || isEditionPage}
-            />
-          </div>
-        )}
-
-        {isEditionPage && (
-          <div className="col-span-3">
-            <Input.Text
-              control={control}
-              name="vlTotalMultaExperiencia"
-              label="Valor da Multa por Experiência"
-              disabled={showFetchingResumo || isEditionPage}
-            />
-          </div>
-        )}
-
-        {isEditionPage && (
-          <div className="col-span-3">
-            <Input.Text
-              control={control}
-              name="vlTotalMultaMobilizacao"
-              label="Valor da Multa por Mobilização"
-              disabled={showFetchingResumo || isEditionPage}
-            />
-          </div>
-        )}
-
-        {isEditionPage && (
-          <div className="col-span-3">
-            <Input.Text
-              control={control}
-              name="vlTotalMedicaoComPenalizacao"
-              label="Valor da Medição com Penalização"
-              onlyNumbers
-              applyMask={coinMask}
-              disabled={showFetchingResumo || isEditionPage}
-            />
-          </div>
-        )}
-
-        {isEditionPage && (
-          <div className="col-span-3">
-            <Input.Text
-              control={control}
-              name="vlReajuste"
-              label="Valor do Reajuste"
-              onlyNumbers
-              applyMask={coinMask}
-              disabled={showFetchingResumo || isEditionPage}
-            />
-          </div>
-        )}
-
-        {isEditionPage && (
-          <div className="col-span-3">
-            <Input.Text
-              control={control}
-              name="vlMedicaoReajustado"
-              label="Valor da Medição Reajustada"
-              onlyNumbers
-              applyMask={coinMask}
-              disabled={showFetchingResumo || isEditionPage}
-            />
-          </div>
-        )}
-
-        {isEditionPage && (
-          <div className="col-span-3">
-            <Input.Text
-              control={control}
-              name="vlRetencao"
-              label="Valor da Retenção"
-              onlyNumbers
-              applyMask={coinMask}
-              disabled={showFetchingResumo || isEditionPage}
-            />
-          </div>
-        )}
-
-        {isEditionPage && (
-          <div className="col-span-3">
-            <Input.Text
-              control={control}
-              name="vlNotaFiscal"
-              label="Valor da Nota Fiscal"
-              onlyNumbers
-              applyMask={coinMask}
-              disabled={showFetchingResumo || isEditionPage}
-            />
-          </div>
-        )}
 
         <div className="relative col-span-12 mt-4 grid grid-cols-12 gap-4 rounded-lg border p-4 pt-6">
           <strong className="absolute -top-3 left-2.5 bg-white px-2">
@@ -190,79 +73,58 @@ export function BoletimMedicaoResumoForm() {
           </strong>
 
           <div className="col-span-3">
-            <Input.Text
+            <Input.Currency
               control={control}
               name="qualidadeEntregaveis"
               label="Qualidade dos Entregáveis"
-              onlyNumbers
-              applyMask={coinMask}
-              disabled={showFetchingResumo}
             />
           </div>
 
           <div className="col-span-3">
-            <Input.Text
+            <Input.Currency
               control={control}
               name="revisaoQualidadeEntregavelProjeto"
               label="Revisão da Qualidade dos Entregáveis"
-              onlyNumbers
-              applyMask={coinMask}
-              disabled={showFetchingResumo}
             />
           </div>
 
           <div className="col-span-3">
-            <Input.Text
+            <Input.Currency
               control={control}
               name="qualidadePrazoEntregaveis"
               label="Qualidade no Prazo dos Entregáveis"
-              onlyNumbers
-              applyMask={coinMask}
-              disabled={showFetchingResumo}
             />
           </div>
 
           <div className="col-span-3">
-            <Input.Text
+            <Input.Currency
               control={control}
               name="qualidadeSupervisaoObra"
               label="Qualidade da Supervisão da Obra"
-              onlyNumbers
-              applyMask={coinMask}
-              disabled={showFetchingResumo}
             />
           </div>
 
           <div className="col-span-4">
-            <Input.Text
+            <Input.Currency
               control={control}
               name="qualidadeDfo"
               label="Qualidade do DFO"
-              onlyNumbers
-              applyMask={coinMask}
-              disabled={showFetchingResumo}
             />
           </div>
 
           <div className="col-span-4">
-            <Input.Text
+            <Input.Currency
               control={control}
               name="qualidadeSegurancaOperacional"
               label="Qualidade da Segurança Operacional"
-              onlyNumbers
-              applyMask={coinMask}
-              disabled={showFetchingResumo}
             />
           </div>
 
           <div className="col-span-4">
-            <Input.Text
+            <Input.Currency
               control={control}
               name="qualidadeServico"
               label="Qualidade do Serviço"
-              onlyNumbers
-              applyMask={coinMask}
-              disabled={showFetchingResumo}
             />
           </div>
         </div>

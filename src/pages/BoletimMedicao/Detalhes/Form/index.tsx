@@ -4,8 +4,10 @@ import { api } from '@/configs/httpClient';
 import { AuthLayout } from '@/layouts/auth-layout';
 import { cn } from '@/lib/utils';
 import { BmDetalhe } from '@/types';
+import { formatCurrency } from '@/utils/currency';
 import { toDate } from '@/utils/dates';
-import { coinMask } from '@/utils/masks';
+import { transformCurrency } from '@/utils/string';
+import { currency } from '@/validators/currency';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError, AxiosResponse } from 'axios';
@@ -22,36 +24,18 @@ interface PageParams {
 }
 
 const detalheSchema = z.object({
-  vlMedicaoPartidaOrcamentaria: z
-    .string()
-    .nonempty('')
-    .regex(
-      /^-?R\$\s?\d{1,8}(\.\d{3})*(,\d{2})?$/,
-      'O valor da medição da partida orçamentária deve conter apenas números',
-    )
-    .optional(),
+  vlMedicaoPartidaOrcamentaria: currency({
+    allowNegative: true,
+    optional: true,
+  }),
   qtdMesTrabalho: z
     .string()
     .refine((value) => !isNaN(Number(value)), {
       message: 'A proporção de dias trabalhados deve ser um número',
     })
     .optional(),
-  vlMultaExperiencia: z
-    .string()
-    .nonempty('')
-    .regex(
-      /^-?R\$\s?\d{1,8}(\.\d{3})*(,\d{2})?$/,
-      'O valor da multa por experiência deve conter apenas números',
-    )
-    .optional(),
-  vlMultaMobilizacao: z
-    .string()
-    .nonempty('')
-    .regex(
-      /^-?R\$\s?\d{1,8}(\.\d{3})*(,\d{2})?$/,
-      'O valor da multa por mobilização deve conter apenas números',
-    )
-    .optional(),
+  vlMultaExperiencia: currency({ allowNegative: true, optional: true }),
+  vlMultaMobilizacao: currency({ allowNegative: true, optional: true }),
 });
 
 type DetalheForm = z.infer<typeof detalheSchema>;
@@ -90,16 +74,16 @@ export function BoletimMedicaoDetalhesForm() {
   const { control, formState, handleSubmit } = useForm<DetalheForm>({
     resolver: zodResolver(detalheSchema),
     values: {
-      vlMedicaoPartidaOrcamentaria: detalhe?.vlMedicaoPartidaOrcamentaria
-        ? coinMask(detalhe.vlMedicaoPartidaOrcamentaria.toString(), true)
-        : coinMask('0'),
+      vlMedicaoPartidaOrcamentaria: transformCurrency(
+        detalhe?.vlMedicaoPartidaOrcamentaria.toString(),
+      ),
       qtdMesTrabalho: detalhe?.qtdMesTrabalho.toString(),
-      vlMultaExperiencia: detalhe?.vlMultaExperiencia
-        ? coinMask(detalhe.vlMultaExperiencia.toString(), true)
-        : coinMask('0'),
-      vlMultaMobilizacao: detalhe?.vlMultaMobilizacao
-        ? coinMask(detalhe.vlMultaMobilizacao.toString(), true)
-        : coinMask('0'),
+      vlMultaExperiencia: transformCurrency(
+        detalhe?.vlMultaExperiencia.toString(),
+      ),
+      vlMultaMobilizacao: transformCurrency(
+        detalhe?.vlMultaMobilizacao.toString(),
+      ),
     },
   });
 
@@ -216,12 +200,10 @@ export function BoletimMedicaoDetalhesForm() {
         />
 
         <div className="col-span-2">
-          <Input.Text
+          <Input.Currency
             control={control}
             name="vlMedicaoPartidaOrcamentaria"
             label="Preço Unitário"
-            onlyNumbers
-            applyMask={coinMask}
           />
         </div>
 
@@ -238,7 +220,7 @@ export function BoletimMedicaoDetalhesForm() {
           label="Valor da Medição"
           value={
             detalhe?.vlMedicaoBm
-              ? coinMask(detalhe.vlMedicaoBm.toString(), true)
+              ? formatCurrency(parseFloat(detalhe?.vlMedicaoBm.toString()))
               : ''
           }
           className="col-span-3"
@@ -255,12 +237,10 @@ export function BoletimMedicaoDetalhesForm() {
         />
 
         <div className="col-span-2">
-          <Input.Text
+          <Input.Currency
             control={control}
             name="vlMultaExperiencia"
             label="Multa por Experiência"
-            onlyNumbers
-            applyMask={coinMask}
           />
         </div>
 
@@ -275,20 +255,18 @@ export function BoletimMedicaoDetalhesForm() {
         />
 
         <div className="col-span-3">
-          <Input.Text
+          <Input.Currency
             control={control}
             name="vlMultaMobilizacao"
             label="Multa por Mobilização"
-            onlyNumbers
-            applyMask={coinMask}
           />
         </div>
 
         <FakeInput
           label="Valor Real da Medição"
           value={
-            detalhe?.vlMedicaoReal.toString()
-              ? coinMask(detalhe.vlMedicaoReal.toString(), true)
+            detalhe?.vlMedicaoReal
+              ? formatCurrency(parseFloat(detalhe.vlMedicaoReal.toString()))
               : ''
           }
           className="col-span-3"

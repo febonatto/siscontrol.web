@@ -1,7 +1,6 @@
 import { AuthLayout } from '@/layouts/auth-layout';
 import { usePartidasOrcamentariasForm } from './usePartidasOrcamentariasForm';
 import { Input } from '@/components/input';
-import { coinMask } from '@/utils/masks';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { LoaderIcon } from 'lucide-react';
@@ -9,6 +8,7 @@ import { addMonths, format } from 'date-fns';
 import { useState } from 'react';
 import { DesmobilizarPessoaDialog } from './DesmobilizarPessoaDialog';
 import { toDate } from '@/utils/dates';
+import { formatCurrency } from '@/utils/currency';
 
 export function PartidasOrcamentariasForm() {
   const {
@@ -122,12 +122,10 @@ export function PartidasOrcamentariasForm() {
         </div>
 
         <div className="col-span-2">
-          <Input.Text
+          <Input.Currency
             control={control}
             name="precoUnitario"
             label="Preço Unitário"
-            onlyNumbers
-            applyMask={coinMask}
             disabled={isFieldsDisabled}
           />
         </div>
@@ -139,13 +137,9 @@ export function PartidasOrcamentariasForm() {
 
           {currentQuantidadeMeses && currentPrecoUnitario && (
             <span className="text-sm">
-              {coinMask(
-                String(
-                  (Number(currentQuantidadeMeses) *
-                    Number(currentPrecoUnitario.replace(/\D/g, ''))) /
-                    100,
-                ),
-                true,
+              {formatCurrency(
+                parseInt(currentQuantidadeMeses) *
+                  parseFloat(currentPrecoUnitario.replace(',', '.')),
               )}
             </span>
           )}

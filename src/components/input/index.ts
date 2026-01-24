@@ -1,3 +1,4 @@
+import { InputCurrency } from './Currency';
 import { InputDate } from './date';
 import { InputSelect } from './select';
 import { InputSwitch } from './switch';
@@ -6,6 +7,7 @@ import { InputTextArea } from './textarea';
 
 export const Input = {
   Text: InputText,
+  Currency: InputCurrency,
   Date: InputDate,
   Select: InputSelect,
   Switch: InputSwitch,
