@@ -26,6 +26,7 @@ interface Balance {
   quantidadeMeses: number;
   mesesTrabalhados: number;
   saldoMeses: number;
+  mesesRestantes: number | null;
   saldoValor: number;
   saldoEmValor: number;
   totalMedido: number;
@@ -94,6 +95,7 @@ export function BalancesReport() {
       'Meses Trabalhados': balance.mesesTrabalhados,
       'Saldo de Meses': balance.saldoMeses,
       'Saldo de Valor': balance.saldoValor,
+      'Meses Restantes': balance.mesesRestantes,
       'Saldo em Valor': balance.saldoEmValor,
       'Total Medido': balance.totalMedido,
       'Total de Multas 71': balance.totalMultaExperiencia,
@@ -172,6 +174,7 @@ export function BalancesReport() {
             <TableHead>Meses Contratual</TableHead>
             <TableHead>Meses Trabalhados</TableHead>
             <TableHead>Saldo de Meses</TableHead>
+            <TableHead>Meses Restantes</TableHead>
             <TableHead>Saldo de Valor</TableHead>
             <TableHead>Saldo em Valor</TableHead>
             <TableHead>Total Medido</TableHead>
@@ -199,6 +202,7 @@ export function BalancesReport() {
                 <TableCell>{balance.quantidadeMeses}</TableCell>
                 <TableCell>{balance.mesesTrabalhados.toFixed(2)}</TableCell>
                 <TableCell>{balance.saldoMeses.toFixed(2)}</TableCell>
+                <TableCell>{balance.mesesRestantes}</TableCell>
                 <TableCell>{formatCurrency(balance.saldoValor)}</TableCell>
                 <TableCell>{formatCurrency(balance.saldoEmValor)}</TableCell>
                 <TableCell>{formatCurrency(balance.totalMedido)}</TableCell>
