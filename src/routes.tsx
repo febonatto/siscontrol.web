@@ -19,6 +19,10 @@ import { BoletimMedicao } from './pages/BoletimMedicao/Resumos';
 import { BoletimMedicaoDetalhes } from './pages/BoletimMedicao/Detalhes';
 import { BoletimMedicaoResumoForm } from './pages/BoletimMedicao/Resumos/Form';
 import { BoletimMedicaoDetalhesForm } from './pages/BoletimMedicao/Detalhes/Form';
+import { MovementsReport } from './pages/Reports/Movements';
+import { BalancesReport } from './pages/Reports/Balances';
+import { BudgetLinesReport } from './pages/Reports/BudgetLines';
+import { FinesReport } from './pages/Reports/Fines';
 
 export function ApplicationRoutes() {
   return (
@@ -80,6 +84,15 @@ export function ApplicationRoutes() {
               path="atualizar/:id"
               element={<BoletimMedicaoResumoForm />}
             />
+          </Route>
+          <Route path="relatorios">
+            <Route path="movimentacoes" element={<MovementsReport />} />
+            <Route path="saldos" element={<BalancesReport />} />
+            <Route
+              path="partidas-orcamentarias"
+              element={<BudgetLinesReport />}
+            />
+            <Route path="multas" element={<FinesReport />} />
           </Route>
         </Route>
       </Routes>

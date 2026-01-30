@@ -118,9 +118,39 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         to="https://app.powerbi.com/groups/c2fe2197-62cf-4349-bb38-7ddbd958cdd0/reports/27a589ba-d7f3-4499-b7ec-ed7544611fd4/3b05a611aee98be10019?experience=power-bi"
                         target="_blank"
                       >
-                        Relatório BI
+                        BI
                       </Link>
                     </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <Link to="/siscontrol/relatorios/movimentacoes">
+                      <SidebarMenuSubButton>Movimentações</SidebarMenuSubButton>
+                    </Link>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <Link to="/siscontrol/relatorios/saldos">
+                      <SidebarMenuSubButton>Saldos</SidebarMenuSubButton>
+                    </Link>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <Link to="/siscontrol/relatorios/partidas-orcamentarias">
+                      <SidebarMenuSubButton>
+                        Partidas Orçamentárias
+                      </SidebarMenuSubButton>
+                    </Link>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <Link to="/siscontrol/relatorios/multas">
+                      <SidebarMenuSubButton>Multas</SidebarMenuSubButton>
+                    </Link>
                   </SidebarMenuSubItem>
                 </SidebarMenuSub>
               </SidebarMenuItem>
