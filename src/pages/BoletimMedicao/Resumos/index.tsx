@@ -1,6 +1,7 @@
 import { AuthLayout } from '@/layouts/auth-layout';
 import { useBoletimMedicaoResumos } from './useBoletimMedicaoResumos';
 import {
+  DownloadIcon,
   EyeIcon,
   LoaderIcon,
   // PencilIcon,
@@ -42,6 +43,7 @@ export function BoletimMedicao() {
     handleResumoBeingDeleted,
     handleConfirmDelete,
     handleCancelDelete,
+    handleGenerateMeasurementReport,
   } = useBoletimMedicaoResumos();
 
   if (!hasAccessModule) {
@@ -149,6 +151,16 @@ export function BoletimMedicao() {
                         {formatCurrency(bmResumo.vlMedicaoReajustado)}
                       </TableCell>
                       <TableCell className="space-x-3.5">
+                        <Button
+                          variant="custom"
+                          className="hover:text-green-400"
+                          onClick={() =>
+                            handleGenerateMeasurementReport(bmResumo.nrBm)
+                          }
+                        >
+                          <DownloadIcon className="size-4" />
+                        </Button>
+
                         <Link
                           to={`/siscontrol/boletim-medicao/${bmResumo.nrBm}`}
                         >

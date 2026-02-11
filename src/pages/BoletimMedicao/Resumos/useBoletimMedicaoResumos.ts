@@ -3,6 +3,8 @@ import { useResumosBM } from '../api/useResumosBM';
 import { useAccessControl } from '@/hooks/useAccessControl';
 import { useDeleteResumoBM } from '../api/useDeleteResumoBM';
 import { useEffect, useRef, useState } from 'react';
+import { useGenerateMeasurementReport } from '../api/useGenerateMeasurementReport';
+import { ExcelTreeGenerator } from './helpers/excel-tree-generator';
 
 const GROUP_ROLES = [
   PersonRoles.PMO_WITH_BI,
@@ -18,6 +20,9 @@ export function useBoletimMedicaoResumos() {
   const [resumoBeingDeleted, setResumoBeingDeleted] = useState<number | null>(
     null,
   );
+  const [measurementReportNumber, setMeasurementReportNumber] = useState<
+    number | null
+  >(null);
 
   const breadcrumbItems = [
     { label: 'Home', href: '/' },
@@ -27,6 +32,13 @@ export function useBoletimMedicaoResumos() {
 
   const getResumos = useResumosBM();
   const { isDeletingResumo, handleDeleteResumo } = useDeleteResumoBM();
+  const { data, isFetching } = useGenerateMeasurementReport(
+    measurementReportNumber,
+  );
+
+  function handleGenerateMeasurementReport(measurementReportNumber: number) {
+    setMeasurementReportNumber(measurementReportNumber);
+  }
 
   useEffect(() => {
     const { current: isFirstRender } = isFirstRenderRef;
@@ -40,6 +52,19 @@ export function useBoletimMedicaoResumos() {
       setResumoBeingDeleted(null);
     }
   }, [isDeletingResumo]);
+
+  useEffect(() => {
+    if (!isFetching) {
+      setMeasurementReportNumber(null);
+    }
+    if (data) {
+      ExcelTreeGenerator.generate(
+        data,
+        measurementReportNumber!,
+        `Relatório de Medição ${measurementReportNumber}.xlsx`,
+      );
+    }
+  }, [isFetching]);
 
   const handleResumoBeingDeleted = (id: number) => setResumoBeingDeleted(id);
 
@@ -58,5 +83,6 @@ export function useBoletimMedicaoResumos() {
     handleResumoBeingDeleted,
     handleConfirmDelete,
     handleCancelDelete,
+    handleGenerateMeasurementReport,
   };
 }
