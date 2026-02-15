@@ -130,6 +130,8 @@ export function usePartidasOrcamentariasForm() {
         ? toDate(dataMobilizacaoReal)
         : null,
     },
+    dataSME: null,
+    numeroSME: '',
   };
 
   const { control, formState, handleSubmit, setError, reset, watch } =
@@ -164,10 +166,32 @@ export function usePartidasOrcamentariasForm() {
     if (currentPartidaOrcamentaria) {
       const { id } = currentPartidaOrcamentaria;
 
-      return updatePartidaOrcamentaria(id, dataToSend);
+      return updatePartidaOrcamentaria(
+        id,
+        getDirtyValues(formState.dirtyFields, dataToSend),
+      );
     }
 
     return createPartidaOrcamentaria(dataToSend);
+  }
+
+  function getDirtyValues(dirtyFields: any, values: any) {
+    if (!dirtyFields || !values) return {};
+
+    if (dirtyFields === true) {
+      return values;
+    }
+
+    return Object.keys(dirtyFields).reduce((acc, key) => {
+      const dirtyValue = dirtyFields[key];
+      const currentValue = values[key];
+
+      if (dirtyValue) {
+        acc[key] = getDirtyValues(dirtyValue, currentValue);
+      }
+
+      return acc;
+    }, {});
   }
 
   const {
@@ -195,10 +219,13 @@ export function usePartidasOrcamentariasForm() {
 
           return false;
         },
+        refetchType: 'all',
       });
 
       if (!isEditionMode) {
         reset();
+      } else {
+        navigate('/siscontrol/partidas-orcamentarias');
       }
     },
     onError: (error) => {
@@ -308,6 +335,7 @@ export function usePartidasOrcamentariasForm() {
   }, []);
 
   return {
+    isEditionMode,
     breadcrumbItems,
     aeroportoOptions,
     isFetchingAeroportoOptions,

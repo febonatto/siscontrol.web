@@ -62,77 +62,89 @@ export const partidaOrcamentariaSchema = z
         ),
       })
       .optional(),
+    dataSME: z.preprocess(
+      (value) => (!value ? null : value),
+      z.date().nullable(),
+    ),
+    numeroSME: z.preprocess(
+      (value) => (value === '' ? null : value),
+      z
+        .string()
+        .regex(/^-?\d+$/, 'A quantidade de pessoas deve conter apenas números')
+        .refine(
+          (value) => Number(value) > 0,
+          'A quantidade de pessoas deve ser positivo',
+        )
+        .nullable(),
+    ),
   })
-  .superRefine(
-    (
-      {
-        tempoExperienciaRequisitado,
-        dataMobilizacaoPrevista,
-        quantidadePessoas,
-        quantidadeMeses,
-        precoUnitario,
-        pessoaPartida,
-      },
-      ctx,
-    ) => {
-      if (!tempoExperienciaRequisitado) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: '',
-          path: ['tempoExperienciaRequisitado'],
-        });
-      }
+  .superRefine((props, ctx) => {
+    const {
+      tempoExperienciaRequisitado,
+      dataMobilizacaoPrevista,
+      quantidadePessoas,
+      quantidadeMeses,
+      precoUnitario,
+      pessoaPartida,
+    } = props;
 
-      if (!dataMobilizacaoPrevista) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: '',
-          path: ['dataMobilizacaoPrevista'],
-        });
-      }
+    if (!tempoExperienciaRequisitado) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: '',
+        path: ['tempoExperienciaRequisitado'],
+      });
+    }
 
-      if (!quantidadePessoas) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: '',
-          path: ['quantidadePessoas'],
-        });
-      }
+    if (!dataMobilizacaoPrevista) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: '',
+        path: ['dataMobilizacaoPrevista'],
+      });
+    }
 
-      if (!quantidadeMeses) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: '',
-          path: ['quantidadeMeses'],
-        });
-      }
+    if (!quantidadePessoas) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: '',
+        path: ['quantidadePessoas'],
+      });
+    }
 
-      if (!precoUnitario) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: '',
-          path: ['precoUnitario'],
-        });
-      }
+    if (!quantidadeMeses) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: '',
+        path: ['quantidadeMeses'],
+      });
+    }
 
-      const { pessoaId, dataMobilizacaoReal } = pessoaPartida || {};
+    if (!precoUnitario) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: '',
+        path: ['precoUnitario'],
+      });
+    }
 
-      if (pessoaId && !dataMobilizacaoReal) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message:
-            'A data de mobilização é obrigatória quando um colaborador é fornecido',
-          path: ['pessoaPartida.dataMobilizacaoReal'],
-        });
-      }
+    const { pessoaId, dataMobilizacaoReal } = pessoaPartida || {};
 
-      if (!pessoaId && dataMobilizacaoReal) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message:
-            'O colaborador é obrigatória quando uma data de mobilização é fornecida',
-          path: ['pessoaPartida.pessoaId'],
-        });
-      }
-    },
-  );
+    if (pessoaId && !dataMobilizacaoReal) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          'A data de mobilização é obrigatória quando um colaborador é fornecido',
+        path: ['pessoaPartida.dataMobilizacaoReal'],
+      });
+    }
+
+    if (!pessoaId && dataMobilizacaoReal) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          'O colaborador é obrigatória quando uma data de mobilização é fornecida',
+        path: ['pessoaPartida.pessoaId'],
+      });
+    }
+  });

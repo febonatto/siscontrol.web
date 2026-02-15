@@ -19,9 +19,11 @@ export function getPartidaOrcamentaria(
 
 export function updatePartidaOrcamentaria(
   partidaOrcamentariaId: number,
-  data: PartidaOrcamentariaForm,
+  data: Partial<PartidaOrcamentariaForm>,
 ): Promise<void> {
-  return api.put(`/partidas-orcamentarias/${partidaOrcamentariaId}`, data);
+  return api.patch(`/partidas-orcamentarias/${partidaOrcamentariaId}`, {
+    ...data,
+  });
 }
 
 export function demobilizePessoa(

@@ -155,6 +155,8 @@ export interface PartidaOrcamentaria {
   quantidadeMeses: number;
   precoUnitario: string;
   montanteContratual: number;
+  dataSME: DateISO | null;
+  numeroSME: number | null;
   criadoEm: Date;
   atualizadoEm: Date;
 
