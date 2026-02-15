@@ -27,7 +27,6 @@ interface Balance {
   mesesTrabalhados: number;
   saldoMeses: number;
   mesesRestantes: number | null;
-  saldoValor: number;
   saldoEmValor: number;
   totalMedido: number;
   totalMultaExperiencia: number;
@@ -94,7 +93,6 @@ export function BalancesReport() {
       'Meses Contratual': balance.quantidadeMeses,
       'Meses Trabalhados': balance.mesesTrabalhados,
       'Saldo de Meses': balance.saldoMeses,
-      'Saldo de Valor': balance.saldoValor,
       'Meses Restantes': balance.mesesRestantes,
       'Saldo em Valor': balance.saldoEmValor,
       'Total Medido': balance.totalMedido,
@@ -119,10 +117,6 @@ export function BalancesReport() {
       },
       'Saldo de Meses': {
         format: '0.00',
-      },
-      'Saldo de Valor': {
-        width: 30,
-        format: '"R$"\ #,##0.00',
       },
       'Saldo em Valor': {
         width: 30,
@@ -175,7 +169,6 @@ export function BalancesReport() {
             <TableHead>Meses Trabalhados</TableHead>
             <TableHead>Saldo de Meses</TableHead>
             <TableHead>Meses Restantes</TableHead>
-            <TableHead>Saldo de Valor</TableHead>
             <TableHead>Saldo em Valor</TableHead>
             <TableHead>Total Medido</TableHead>
             <TableHead>Total de Multas 71</TableHead>
@@ -203,7 +196,6 @@ export function BalancesReport() {
                 <TableCell>{balance.mesesTrabalhados.toFixed(2)}</TableCell>
                 <TableCell>{balance.saldoMeses.toFixed(2)}</TableCell>
                 <TableCell>{balance.mesesRestantes}</TableCell>
-                <TableCell>{formatCurrency(balance.saldoValor)}</TableCell>
                 <TableCell>{formatCurrency(balance.saldoEmValor)}</TableCell>
                 <TableCell>{formatCurrency(balance.totalMedido)}</TableCell>
                 <TableCell>

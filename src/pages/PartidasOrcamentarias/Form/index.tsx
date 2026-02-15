@@ -12,6 +12,7 @@ import { formatCurrency } from '@/utils/currency';
 
 export function PartidasOrcamentariasForm() {
   const {
+    isEditionMode,
     breadcrumbItems,
     aeroportoOptions,
     isFetchingAeroportoOptions,
@@ -130,7 +131,7 @@ export function PartidasOrcamentariasForm() {
           />
         </div>
 
-        <div className="relative col-span-2 flex items-center rounded-md border-zinc-50 pl-3 text-left font-normal shadow-sm">
+        <div className="relative col-span-2 flex h-9 items-center rounded-md border-zinc-50 pl-3 text-left font-normal shadow-sm">
           <span className="pointer-events-none absolute top-0 left-1.5 z-10 -translate-y-1/2 bg-white px-2 text-xs text-zinc-700 opacity-70 transition-all peer-valid:top-0 peer-valid:left-1.5 peer-valid:text-xs">
             Montante Contratual
           </span>
@@ -154,6 +155,29 @@ export function PartidasOrcamentariasForm() {
             disabled={isFieldsDisabled}
           />
         </div>
+
+        {isEditionMode && (
+          <>
+            <div className="col-span-3">
+              <Input.Date
+                control={control}
+                name="dataSME"
+                label="Data da SME"
+                disabled={isFieldsDisabled}
+              />
+            </div>
+
+            <div className="col-span-3">
+              <Input.Text
+                control={control}
+                name="numeroSME"
+                label="Número da SME"
+                onlyNumbers
+                disabled={isFieldsDisabled}
+              />
+            </div>
+          </>
+        )}
 
         <Separator className="col-span-12 my-3" />
 

@@ -1,6 +1,7 @@
 import { AuthLayout } from '@/layouts/auth-layout';
 import { useBoletimMedicaoResumos } from './useBoletimMedicaoResumos';
 import {
+  DownloadIcon,
   EyeIcon,
   LoaderIcon,
   // PencilIcon,
@@ -38,10 +39,13 @@ export function BoletimMedicao() {
     showFetchingResumos,
     showEmptyResumos,
     isDeletingResumo,
+    isFetching,
+    measurementReportNumber,
     shouldShowDeleteModal,
     handleResumoBeingDeleted,
     handleConfirmDelete,
     handleCancelDelete,
+    handleGenerateMeasurementReport,
   } = useBoletimMedicaoResumos();
 
   if (!hasAccessModule) {
@@ -149,6 +153,22 @@ export function BoletimMedicao() {
                         {formatCurrency(bmResumo.vlMedicaoReajustado)}
                       </TableCell>
                       <TableCell className="space-x-3.5">
+                        <Button
+                          variant="custom"
+                          className="hover:text-green-400"
+                          onClick={() =>
+                            handleGenerateMeasurementReport(bmResumo.nrBm)
+                          }
+                          disabled={isFetching}
+                        >
+                          {isFetching &&
+                          bmResumo.nrBm === measurementReportNumber ? (
+                            <LoaderIcon size={16} className="animate-spin" />
+                          ) : (
+                            <DownloadIcon className="size-4" />
+                          )}
+                        </Button>
+
                         <Link
                           to={`/siscontrol/boletim-medicao/${bmResumo.nrBm}`}
                         >
