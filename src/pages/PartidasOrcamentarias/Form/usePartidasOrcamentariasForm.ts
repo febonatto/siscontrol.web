@@ -182,16 +182,19 @@ export function usePartidasOrcamentariasForm() {
       return values;
     }
 
-    return Object.keys(dirtyFields).reduce((acc, key) => {
-      const dirtyValue = dirtyFields[key];
-      const currentValue = values[key];
+    return Object.keys(dirtyFields).reduce(
+      (acc: { [key: string]: any }, key) => {
+        const dirtyValue = dirtyFields[key];
+        const currentValue = values[key];
 
-      if (dirtyValue) {
-        acc[key] = getDirtyValues(dirtyValue, currentValue);
-      }
+        if (dirtyValue) {
+          acc[key] = getDirtyValues(dirtyValue, currentValue);
+        }
 
-      return acc;
-    }, {});
+        return acc;
+      },
+      {} as { [key: string]: any },
+    );
   }
 
   const {
