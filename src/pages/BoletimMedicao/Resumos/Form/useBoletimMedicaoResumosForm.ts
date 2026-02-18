@@ -69,7 +69,7 @@ export function useBoletimMedicaoResumosForm() {
       const today = new Date();
       const isEqualMonth = today.getMonth() === periodoMedicaoFinal.getMonth();
 
-      if (isEqualMonth) {
+      if (isEqualMonth && today.getDate() < 15) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message:
