@@ -145,7 +145,7 @@ export function usePartidasOrcamentariasForm() {
   const currentPrecoUnitario = watch('precoUnitario');
 
   function executePartidaOrcamentariaMutation(data: PartidaOrcamentariaForm) {
-    const { pessoaPartida: formPessoaPartida } = data;
+    const { pessoaPartida: formPessoaPartida, precoUnitario } = data;
     const shouldSendPessoaPartida =
       !!formPessoaPartida &&
       !!formPessoaPartida.pessoaId &&
@@ -160,6 +160,7 @@ export function usePartidasOrcamentariasForm() {
 
     const dataToSend = {
       ...data,
+      precoUnitario: precoUnitario?.replace(/,/g, '.'),
       pessoaPartida,
     };
 
