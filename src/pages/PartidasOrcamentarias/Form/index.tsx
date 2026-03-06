@@ -14,7 +14,6 @@ import { cn } from '@/lib/utils';
 
 export function PartidasOrcamentariasForm() {
   const {
-    isEditionMode,
     breadcrumbItems,
     aeroportoOptions,
     isFetchingAeroportoOptions,
@@ -159,28 +158,24 @@ export function PartidasOrcamentariasForm() {
           />
         </div>
 
-        {isEditionMode && (
-          <>
-            <div className="col-span-3">
-              <Input.Date
-                control={control}
-                name="dataSME"
-                label="Data da SME"
-                disabled={isFieldsDisabled}
-              />
-            </div>
+        <div className="col-span-3">
+          <Input.Date
+            control={control}
+            name="dataSME"
+            label="Data da SME"
+            disabled={isFieldsDisabled}
+          />
+        </div>
 
-            <div className="col-span-3">
-              <Input.Text
-                control={control}
-                name="numeroSME"
-                label="Número da SME"
-                onlyNumbers
-                disabled={isFieldsDisabled}
-              />
-            </div>
-          </>
-        )}
+        <div className="col-span-3">
+          <Input.Text
+            control={control}
+            name="numeroSME"
+            label="Número da SME"
+            onlyNumbers
+            disabled={isFieldsDisabled}
+          />
+        </div>
 
         <Separator className="col-span-12 my-3" />
 
@@ -275,21 +270,22 @@ export function PartidasOrcamentariasForm() {
         </div>
       )}
 
-      {currentPartidaOrcamentaria && (
-        <div className="mt-8 rounded-lg border p-4">
-          <strong className="mb-4 block">Histórico de Versões</strong>
-          <div className="max-h-[576px] space-y-4 overflow-auto">
-            {currentPartidaOrcamentaria.isCurrent &&
-              currentPartidaOrcamentaria.history.map(
-                ({ id, dataSME, numeroSME }) => (
+      {currentPartidaOrcamentaria &&
+        currentPartidaOrcamentaria.isCurrent &&
+        currentPartidaOrcamentaria.history.length > 0 && (
+          <div className="mt-8 rounded-lg border p-4">
+            <strong className="mb-4 block">Histórico de Versões</strong>
+            <div className="max-h-[576px] space-y-4 overflow-auto">
+              {currentPartidaOrcamentaria.history.map(
+                ({ id, dataSME, numeroSME, isOriginal }) => (
                   <Link
                     key={id}
                     to={`/siscontrol/partidas-orcamentarias/atualizar/${id}`}
                     className="block hover:underline"
                   >
                     <p className="text-sm font-semibold *:font-normal">
-                      Versão: <span>{dataSME ? numeroSME : 'Original'}</span>{' '}
-                      {dataSME && (
+                      Versão: <span>{isOriginal ? 'Original' : numeroSME}</span>{' '}
+                      {!isOriginal && dataSME && (
                         <>
                           | Data da SME:{'  '}
                           <span>{format(toDate(dataSME), 'dd/MM/yyyy')}</span>
@@ -299,20 +295,27 @@ export function PartidasOrcamentariasForm() {
                   </Link>
                 ),
               )}
-            {!currentPartidaOrcamentaria.isCurrent &&
-              currentPartidaOrcamentaria.current && (
-                <Link
-                  to={`/siscontrol/partidas-orcamentarias/atualizar/${currentPartidaOrcamentaria.current.id}`}
-                  className="hover:underline"
-                >
-                  <p className="text-sm font-semibold *:font-normal">
-                    Versão: <span>Vigente</span>
-                  </p>
-                </Link>
-              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+      {currentPartidaOrcamentaria &&
+        !currentPartidaOrcamentaria.isCurrent &&
+        currentPartidaOrcamentaria.current && (
+          <div className="mt-8 rounded-lg border p-4">
+            <strong className="mb-4 block">Histórico de Versões</strong>
+            <div className="max-h-[576px] space-y-4 overflow-auto">
+              <Link
+                to={`/siscontrol/partidas-orcamentarias/atualizar/${currentPartidaOrcamentaria.current.id}`}
+                className="hover:underline"
+              >
+                <p className="text-sm font-semibold *:font-normal">
+                  Versão: <span>Vigente</span>
+                </p>
+              </Link>
+            </div>
+          </div>
+        )}
 
       <DesmobilizarPessoaDialog
         isVisible={isDesmobilizarPessoaDialogVisible}

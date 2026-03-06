@@ -14,6 +14,7 @@ export type FindOnePartidaOrcamentaria = PartidaOrcamentaria & {
     id: number;
     dataSME: DateISO | null;
     numeroSME: number | null;
+    isOriginal: boolean;
   }[];
 };
 
