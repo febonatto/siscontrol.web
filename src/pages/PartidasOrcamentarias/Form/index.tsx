@@ -9,6 +9,8 @@ import { useState } from 'react';
 import { DesmobilizarPessoaDialog } from './DesmobilizarPessoaDialog';
 import { toDate } from '@/utils/dates';
 import { formatCurrency } from '@/utils/currency';
+import { Link } from 'react-router';
+import { cn } from '@/lib/utils';
 
 export function PartidasOrcamentariasForm() {
   const {
@@ -20,7 +22,8 @@ export function PartidasOrcamentariasForm() {
     pessoasOptions,
     isFetchingPessoasOptions,
     control,
-    currentMobilizedPessoa,
+    currentPartidaOrcamentaria,
+    currentMobilizedPerson,
     currentQuantidadeMeses,
     currentDataMobilizacaoPrevista,
     currentPrecoUnitario,
@@ -110,7 +113,7 @@ export function PartidasOrcamentariasForm() {
           </span>
 
           {currentQuantidadeMeses && currentDataMobilizacaoPrevista && (
-            <span className="text-sm">
+            <span className={cn('text-sm', isFieldsDisabled && 'opacity-50')}>
               {format(
                 addMonths(
                   currentDataMobilizacaoPrevista,
@@ -137,7 +140,7 @@ export function PartidasOrcamentariasForm() {
           </span>
 
           {currentQuantidadeMeses && currentPrecoUnitario && (
-            <span className="text-sm">
+            <span className={cn('text-sm', isFieldsDisabled && 'opacity-50')}>
               {formatCurrency(
                 parseInt(currentQuantidadeMeses) *
                   parseFloat(currentPrecoUnitario.replace(',', '.')),
@@ -194,11 +197,11 @@ export function PartidasOrcamentariasForm() {
               isDisabledChangePessoa
             }
           />
-          {currentMobilizedPessoa?.dataDesmobilizacaoReal && (
+          {currentMobilizedPerson?.dataDesmobilizacaoReal && (
             <small className="mt-2 ml-4 inline-block text-xs">
               Será desmobilizado em:{' '}
               {format(
-                toDate(currentMobilizedPessoa.dataDesmobilizacaoReal),
+                toDate(currentMobilizedPerson.dataDesmobilizacaoReal),
                 'dd/MM/yyyy',
               )}
             </small>
@@ -268,6 +271,45 @@ export function PartidasOrcamentariasForm() {
                 );
               },
             )}
+          </div>
+        </div>
+      )}
+
+      {currentPartidaOrcamentaria && (
+        <div className="mt-8 rounded-lg border p-4">
+          <strong className="mb-4 block">Histórico de Versões</strong>
+          <div className="max-h-[576px] space-y-4 overflow-auto">
+            {currentPartidaOrcamentaria.isCurrent &&
+              currentPartidaOrcamentaria.history.map(
+                ({ id, dataSME, numeroSME }) => (
+                  <Link
+                    key={id}
+                    to={`/siscontrol/partidas-orcamentarias/atualizar/${id}`}
+                    className="block hover:underline"
+                  >
+                    <p className="text-sm font-semibold *:font-normal">
+                      Versão: <span>{dataSME ? numeroSME : 'Original'}</span>{' '}
+                      {dataSME && (
+                        <>
+                          | Data da SME:{'  '}
+                          <span>{format(toDate(dataSME), 'dd/MM/yyyy')}</span>
+                        </>
+                      )}
+                    </p>
+                  </Link>
+                ),
+              )}
+            {!currentPartidaOrcamentaria.isCurrent &&
+              currentPartidaOrcamentaria.current && (
+                <Link
+                  to={`/siscontrol/partidas-orcamentarias/atualizar/${currentPartidaOrcamentaria.current.id}`}
+                  className="hover:underline"
+                >
+                  <p className="text-sm font-semibold *:font-normal">
+                    Versão: <span>Vigente</span>
+                  </p>
+                </Link>
+              )}
           </div>
         </div>
       )}

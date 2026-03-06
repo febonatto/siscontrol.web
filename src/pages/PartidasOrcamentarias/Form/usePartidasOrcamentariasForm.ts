@@ -105,10 +105,10 @@ export function usePartidasOrcamentariasForm() {
     precoUnitario,
     aeroporto,
     pessoaPartida,
-    currentMobilizedPessoa,
+    currentMobilizedPerson,
   } = currentPartidaOrcamentaria || {};
   const { id: aeroportoId } = aeroporto || {};
-  const { pessoa, dataMobilizacaoReal } = currentMobilizedPessoa || {};
+  const { pessoa, dataMobilizacaoReal } = currentMobilizedPerson || {};
   const { id: pessoaId } = pessoa || {};
 
   const initialValues: PartidaOrcamentariaForm = {
@@ -209,13 +209,12 @@ export function usePartidasOrcamentariasForm() {
 
       queryClient.invalidateQueries({
         predicate: (query) => {
-          const [key, param] = [query.queryKey[0], query.queryKey[1]];
+          const key = query.queryKey[0];
 
           const isPartidaOrcamentariaListKey =
             key === PARTIDA_ORCAMENTARIA_LIST_KEY;
           const isCurrentPartidaOrcamentariaKey =
-            key === PARTIDA_ORCAMENTARIA_UNIQUE_KEY &&
-            param === partidaOrcamentariaId!;
+            key === PARTIDA_ORCAMENTARIA_UNIQUE_KEY;
 
           if (isPartidaOrcamentariaListKey || isCurrentPartidaOrcamentariaKey) {
             return true;
@@ -244,10 +243,13 @@ export function usePartidasOrcamentariasForm() {
 
   const { isDirty } = formState;
 
-  const isFieldsDisabled = isEditionMode && isFetchingPartidaOrcamentaria;
+  const isFieldsDisabled =
+    (isEditionMode && isFetchingPartidaOrcamentaria) ||
+    (isEditionMode && !currentPartidaOrcamentaria?.isCurrent);
   const isButtonDisabled =
     (isEditionMode && !isDirty) ||
     (isEditionMode && isFetchingPartidaOrcamentaria) ||
+    (isEditionMode && !currentPartidaOrcamentaria?.isCurrent) ||
     isMutatingPartidaOrcamentaria;
 
   function onSubmit(data: PartidaOrcamentariaForm) {
@@ -278,7 +280,7 @@ export function usePartidasOrcamentariasForm() {
       if (
         !currentPartidaOrcamentaria ||
         !pessoaId ||
-        !currentMobilizedPessoa?.id
+        !currentMobilizedPerson?.id
       ) {
         reject();
         return;
@@ -295,7 +297,7 @@ export function usePartidasOrcamentariasForm() {
         demobilizePessoa({
           partidaOrcamentariaId: partidaOrcamentariaId!,
           pessoaId: pessoaId!,
-          pessoaPartidaId: currentMobilizedPessoa!.id,
+          pessoaPartidaId: currentMobilizedPerson!.id,
           dataDesmobilizacaoReal,
         }),
       onSuccess: () => {
@@ -330,7 +332,7 @@ export function usePartidasOrcamentariasForm() {
 
   const isDisabledChangePessoa =
     !!currentPartidaOrcamentaria &&
-    !!currentPartidaOrcamentaria.currentMobilizedPessoa;
+    !!currentPartidaOrcamentaria.currentMobilizedPerson;
 
   useEffect(() => {
     if (!hasAuthorization) {
@@ -347,7 +349,8 @@ export function usePartidasOrcamentariasForm() {
     pessoaPartida,
     isFetchingPessoasOptions,
     control,
-    currentMobilizedPessoa,
+    currentPartidaOrcamentaria,
+    currentMobilizedPerson,
     currentQuantidadeMeses,
     currentDataMobilizacaoPrevista,
     currentPrecoUnitario,
