@@ -15,9 +15,9 @@ interface ColumnConfig {
   totalKey?: keyof ReportTotal;
 }
 
-const CURRENCY_FORMAT = '"R$" #,##0.00';
-const DECIMAL_NUMBER_FORMAT = '0.00';
-const PERCENTAGE_FORMAT = '0"%"';
+export const CURRENCY_FORMAT = '"R$" #,##0.00';
+export const DECIMAL_NUMBER_FORMAT = '0.00';
+export const PERCENTAGE_FORMAT = '0"%"';
 
 export function getColumnConfig(
   measurementReportNumber: number,
@@ -86,24 +86,27 @@ export function getColumnConfig(
       group: 'SME',
       header: 'Preço Unitário',
       width: 30,
-      key: 'smeUnitPrice',
-      totalKey: 'smeUnitPrice',
+      key: 'unitPriceContractual',
       format: CURRENCY_FORMAT,
     },
     {
       group: 'SME',
       header: 'Meses',
       width: 10,
-      key: 'smeAmountMonths',
-      totalKey: 'smeAmountMonths',
+      key: 'amountMonthsContractual',
     },
     {
       group: 'SME',
       header: 'Valor Total do Contrato',
       width: 30,
-      key: 'smeContractualAmount',
-      totalKey: 'smeContractualAmount',
+      key: 'contractualAmountContractual',
       format: CURRENCY_FORMAT,
+    },
+    {
+      group: 'SME',
+      header: 'Número da SME',
+      width: 20,
+      key: 'smeNumber',
     },
     {
       group: 'Acumulado Anterior',

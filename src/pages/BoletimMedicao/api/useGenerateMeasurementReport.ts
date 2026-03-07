@@ -2,6 +2,26 @@ import { api } from '@/configs/httpClient';
 import { useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 
+export interface MeasurementReportResume {
+  measurementReportNumber: number;
+  initialMeasurementPeriod: Date;
+  finalMeasurementPeriod: Date;
+  totalMeasurementValueWithOnlyExperiencePenalty: number;
+  totalFineExperienceValue: number;
+  totalFineMobilizationValue: number;
+  deliverableQuality: number;
+  projectDeliverableQualityReview: number;
+  deliverableTimelinessQuality: number;
+  constructionSupervisionQuality: number;
+  dfoQuality: number;
+  operationalSafetyQuality: number;
+  serviceQuality: number;
+  totalMeasurementValueWithPenalties: number;
+  adjustmentIndex: number;
+  readjustValue: number;
+  readjustedMeasurementValue: number;
+}
+
 export interface MeasurementReportDetailLine {
   code: string;
   service: string;
@@ -12,9 +32,10 @@ export interface MeasurementReportDetailLine {
   unitPrice: number;
   amountMonths: number;
   contractualAmount: number;
-  smeUnitPrice: number;
-  smeAmountMonths: number;
-  smeContractualAmount: number;
+  smeNumber: Nullable<number>;
+  unitPriceContractual: number;
+  amountMonthsContractual: number;
+  contractualAmountContractual: number;
   previousAmountWorkedMonths: number;
   previousTotalPaid: number;
   requiredExperienceTime: number;
@@ -37,9 +58,6 @@ export interface ReportTotal {
   unitPrice: number;
   amountMonths: number;
   contractualAmount: number;
-  smeUnitPrice: number;
-  smeAmountMonths: number;
-  smeContractualAmount: number;
   previousAmountWorkedMonths: number;
   previousTotalPaid: number;
   requiredExperienceTime: number;
@@ -71,9 +89,14 @@ export interface ReportBlockDTO {
   subBlocks?: ReportSubBlockDTO[];
 }
 
-export interface MeasurementReportExcel {
+export interface MeasurementReportLine {
   totals: ReportTotal;
   blocks: ReportBlockDTO[];
+}
+
+export interface MeasurementReportExcel {
+  measurementReportResume: MeasurementReportResume;
+  measurementReportDetails: MeasurementReportLine;
 }
 
 async function generateMeasurementReport(

@@ -1,9 +1,14 @@
-import { MeasurementReportExcel } from '../../api/useGenerateMeasurementReport';
+import {
+  MeasurementReportExcel,
+  MeasurementReportLine,
+  MeasurementReportResume,
+} from '../../api/useGenerateMeasurementReport';
 
 import ExcelJS from 'exceljs';
 import {
   applyStylesToCell,
   createHeaderRow,
+  CURRENCY_FORMAT,
   getColumnConfig,
   getStyle,
   GroupVariant,
@@ -19,9 +24,57 @@ export class ExcelTreeGenerator {
     measurementReportNumber: number,
     fileName: string,
   ) {
-    // 1. Criação do Workbook e Worksheet
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet(`BM${measurementReportNumber}`, {
+
+    await this.generateResumeworksheet(
+      workbook,
+      data.measurementReportResume,
+      'Resumo',
+    );
+
+    await this.generateDetailsWorksheet(
+      workbook,
+      measurementReportNumber,
+      data.measurementReportDetails,
+      `BM${measurementReportNumber}`,
+    );
+
+    await this.downloadWorkbook(workbook, fileName);
+  }
+
+  private static async generateResumeworksheet(
+    workbook: ExcelJS.Workbook,
+    data: MeasurementReportResume,
+    fileName: string,
+  ) {
+    const worksheet = workbook.addWorksheet('Resumo');
+
+    worksheet.columns = [
+      { width: 39 },
+      { width: 39 },
+      { width: 25 },
+      { width: 30 },
+      { width: 30 },
+      { width: 30 },
+      { width: 30 },
+      { width: 20 },
+    ];
+
+    createReadjustmentTable({ data, worksheet });
+    addEmptyRow(worksheet, 1);
+
+    createDivisionForEachCompanyTable({ data, worksheet });
+    addEmptyRow(worksheet, 3);
+  }
+
+  private static async generateDetailsWorksheet(
+    workbook: ExcelJS.Workbook,
+    measurementReportNumber: number,
+    data: MeasurementReportLine,
+    sheetName: string,
+  ) {
+    // 1. Criação do Workbook e Worksheet
+    const worksheet = workbook.addWorksheet(sheetName, {
       views: [
         {
           state: 'frozen',
@@ -256,6 +309,13 @@ export class ExcelTreeGenerator {
 
                 // Tratamento de Números
                 if (column.format) {
+                  const isNullish =
+                    value === null || value === undefined || value === '';
+
+                  if (isNullish) {
+                    return column.group === 'SME' ? null : 0;
+                  }
+
                   const numValue = Number(value);
                   if (!isNaN(numValue)) return numValue;
                 }
@@ -297,6 +357,13 @@ export class ExcelTreeGenerator {
                 value = dateValue.toLocaleDateString('pt-BR');
             }
             if (column.format) {
+              const isNullish =
+                value === null || value === undefined || value === '';
+
+              if (isNullish) {
+                return column.group === 'SME' ? null : 0;
+              }
+
               const numValue = Number(value);
               if (!isNaN(numValue)) return numValue;
             }
@@ -327,21 +394,274 @@ export class ExcelTreeGenerator {
       }
       row.height = height; // ExcelJS usa 'points' para altura por padrão
     });
+  }
 
-    // 9. Gerar Arquivo e Download
+  private static async downloadWorkbook(
+    workbook: ExcelJS.Workbook,
+    fileName: string,
+  ) {
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
 
-    // Cria link invisível para download
     const url = window.URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
     anchor.download = fileName;
+
     document.body.appendChild(anchor);
+    console.log('aqui');
     anchor.click();
+
     document.body.removeChild(anchor);
     window.URL.revokeObjectURL(url);
+  }
+}
+
+interface CreateReadjustmentTableParams {
+  data: MeasurementReportResume;
+  worksheet: ExcelJS.Worksheet;
+}
+
+function addEmptyRow(worksheet: ExcelJS.Worksheet, rowSpan: number = 1) {
+  for (let i = 0; i < rowSpan; i++) {
+    worksheet.addRow([]);
+  }
+}
+
+function createReadjustmentTable({
+  data,
+  worksheet,
+}: CreateReadjustmentTableParams) {
+  const EMPTY_CELL = '';
+
+  const INITIAL_MERGE_CELL = 6;
+  const MERGE_ROWS_COUNT = 3;
+
+  function mergeRows(rows: ExcelJS.Row[]) {
+    const firstMergeRow = rows[1];
+    const lastMergeRow = rows[rows.length - 1];
+    Array.from({ length: MERGE_ROWS_COUNT })
+      .map((_, index) => INITIAL_MERGE_CELL + index)
+      .forEach((row) => {
+        worksheet.mergeCells(
+          `${firstMergeRow.getCell(row).address}:${lastMergeRow.getCell(row).address}`,
+        );
+      });
+  }
+
+  function applyCurrencyFormat(row: ExcelJS.Row, isMergedCell: boolean) {
+    const currencyCells = [3, 5];
+
+    if (isMergedCell) {
+      currencyCells.push(7, 8);
+    }
+
+    currencyCells.forEach((cell) => {
+      row.getCell(cell).numFmt = CURRENCY_FORMAT;
+    });
+  }
+
+  function applyCellBorders(
+    row: ExcelJS.Row,
+    shouldApplyTop: boolean,
+    shouldApplyBottom: boolean,
+  ) {
+    const borderCells = [1, 2, 3, 4, 5, 6, 7, 8];
+    const customBorderCells = [3, 5, 6, 7, 8];
+
+    borderCells.forEach((cell) => {
+      let borderStyles: Partial<ExcelJS.Borders> = {
+        ...(shouldApplyTop && { top: { style: 'medium' } }),
+        ...(shouldApplyBottom && { bottom: { style: 'medium' } }),
+      };
+
+      row.getCell(cell).border = borderStyles;
+
+      if (customBorderCells.includes(cell)) {
+        borderStyles = {
+          ...borderStyles,
+          right: {
+            style: 'medium',
+          },
+        };
+
+        row.getCell(cell).border = borderStyles;
+      }
+    });
+  }
+
+  const firstRow = worksheet.addRow([
+    'VALOR MEDIDO',
+    EMPTY_CELL,
+    data.totalMeasurementValueWithPenalties,
+    'VALOR APROVADO',
+    data.totalMeasurementValueWithPenalties,
+    'ÍNDICE DE REAJUSTE',
+    'ITENS SEM REAJUSTE',
+    'ITENS SEM RETENÇÃO',
+  ]);
+  const secondRow = worksheet.addRow([
+    'REAJUSTE',
+    EMPTY_CELL,
+    data.readjustValue,
+    'REAJUSTE',
+    data.readjustValue,
+    data.adjustmentIndex + '%',
+    EMPTY_CELL,
+    EMPTY_CELL,
+  ]);
+  const thirdRow = worksheet.addRow([
+    'DEVOLUÇÃO REAJUSTE SERVIÇOS',
+    EMPTY_CELL,
+    EMPTY_CELL,
+    'DEVOLUÇÃO REAJUSTE SERVIÇOS',
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+  ]);
+  const fourthRow = worksheet.addRow([
+    ...Array.from({ length: 8 }).map(() => EMPTY_CELL),
+  ]);
+  const fifthRow = worksheet.addRow([
+    'VALOR MEDIDO REAJUSTADO',
+    EMPTY_CELL,
+    data.readjustedMeasurementValue,
+    'VALOR MEDIDO REAJUSTADO',
+    data.readjustedMeasurementValue,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+  ]);
+
+  const rows = [firstRow, secondRow, thirdRow, fourthRow, fifthRow];
+
+  mergeRows(rows);
+
+  rows.forEach((row, index) => {
+    const shouldMergeCells = index === 1;
+    applyCurrencyFormat(row, shouldMergeCells);
+
+    const shouldApplyTop = index === 0;
+    const shouldApplyBottom = index === rows.length - 1;
+    applyCellBorders(row, shouldApplyTop, shouldApplyBottom);
+  });
+}
+
+interface CreateDivisionForEachCompanyTableParams {
+  data: MeasurementReportResume;
+  worksheet: ExcelJS.Worksheet;
+}
+
+function createDivisionForEachCompanyTable({
+  data,
+  worksheet,
+}: CreateDivisionForEachCompanyTableParams) {
+  const EMPTY_CELL = '';
+  const ENGECORPS_PERCENTAGE = 0.4;
+  const SENNER_PERCENTAGE = 0.4;
+  const GPO_PERCENTAGE = 0.2;
+
+  const headerRow = worksheet.addRow([
+    'EMPRESA',
+    EMPTY_CELL,
+    'VALOR NOTA FISCAL',
+    'RETENÇÃO',
+    'DESCONTO VALOR NÃO RETIDO',
+    'VALOR FINAL DA RETENÇÃO',
+    'DESCONTO VL NÃO REAJUSTÁVEL',
+    'PAGAMENTO',
+  ]);
+  const engecorpsRow = worksheet.addRow([
+    'ENGECORPS',
+    EMPTY_CELL,
+    data.readjustedMeasurementValue * ENGECORPS_PERCENTAGE,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    data.readjustedMeasurementValue * ENGECORPS_PERCENTAGE,
+  ]);
+  const sennerRow = worksheet.addRow([
+    'SENNER',
+    EMPTY_CELL,
+    data.readjustedMeasurementValue * SENNER_PERCENTAGE,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    data.readjustedMeasurementValue * SENNER_PERCENTAGE,
+  ]);
+  const gpoRow = worksheet.addRow([
+    'GPO',
+    EMPTY_CELL,
+    data.readjustedMeasurementValue * GPO_PERCENTAGE,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    data.readjustedMeasurementValue * GPO_PERCENTAGE,
+  ]);
+  const totalRow = worksheet.addRow([
+    'TOTAL',
+    EMPTY_CELL,
+    data.readjustedMeasurementValue,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    data.readjustedMeasurementValue,
+  ]);
+
+  const rows = [headerRow, engecorpsRow, sennerRow, gpoRow, totalRow];
+  rows.forEach((row, index) => {
+    const isHeaderRow = index === 0;
+    const isTotalRow = index === rows.length - 1;
+
+    if (!isHeaderRow) {
+      applyCurrencyFormat(row);
+    }
+
+    applyCellStyles(row, isHeaderRow, isTotalRow);
+  });
+
+  function applyCurrencyFormat(row: ExcelJS.Row) {
+    const currencyCells = [3, 4, 5, 6, 7, 8];
+
+    currencyCells.forEach((cell) => {
+      row.getCell(cell).numFmt = CURRENCY_FORMAT;
+    });
+  }
+
+  function applyCellStyles(
+    row: ExcelJS.Row,
+    isHeaderRow: boolean,
+    isTotalRow: boolean,
+  ) {
+    const isHighlightRow = isHeaderRow || isTotalRow;
+    const boldCellIndex = [3, 6];
+
+    row.eachCell({ includeEmpty: true }, (cell, columnNumber) => {
+      cell.style = {
+        ...cell.style,
+        font: { bold: isHighlightRow || boldCellIndex.includes(columnNumber) },
+        ...(isHighlightRow && {
+          fill: {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF91D2FF' },
+          },
+          border: {
+            ...(isHeaderRow && { top: { style: 'thin' } }),
+            ...(isTotalRow && { bottom: { style: 'thin' } }),
+          },
+          alignment: {
+            ...(columnNumber !== 1 && !isTotalRow && { horizontal: 'center' }),
+          },
+        }),
+      };
+    });
   }
 }
