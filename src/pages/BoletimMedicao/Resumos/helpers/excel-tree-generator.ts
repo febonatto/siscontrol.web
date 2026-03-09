@@ -26,11 +26,7 @@ export class ExcelTreeGenerator {
   ) {
     const workbook = new ExcelJS.Workbook();
 
-    await this.generateResumeworksheet(
-      workbook,
-      data.measurementReportResume,
-      'Resumo',
-    );
+    await this.generateResumeworksheet(workbook, data.measurementReportResume);
 
     await this.generateDetailsWorksheet(
       workbook,
@@ -45,7 +41,6 @@ export class ExcelTreeGenerator {
   private static async generateResumeworksheet(
     workbook: ExcelJS.Workbook,
     data: MeasurementReportResume,
-    fileName: string,
   ) {
     const worksheet = workbook.addWorksheet('Resumo');
 
@@ -313,7 +308,9 @@ export class ExcelTreeGenerator {
                     value === null || value === undefined || value === '';
 
                   if (isNullish) {
-                    return column.group === 'SME' ? null : 0;
+                    return column.group === 'SME' || column.group === 'Contrato'
+                      ? null
+                      : 0;
                   }
 
                   const numValue = Number(value);
@@ -361,7 +358,9 @@ export class ExcelTreeGenerator {
                 value === null || value === undefined || value === '';
 
               if (isNullish) {
-                return column.group === 'SME' ? null : 0;
+                return column.group === 'SME' || column.group === 'Contrato'
+                  ? null
+                  : 0;
               }
 
               const numValue = Number(value);
