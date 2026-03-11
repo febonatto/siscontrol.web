@@ -55,9 +55,9 @@ export interface MeasurementReportDetailLine {
 }
 
 export interface ReportTotal {
-  unitPrice: number;
-  amountMonths: number;
-  contractualAmount: number;
+  unitPriceContractual: number;
+  amountMonthsContractual: number;
+  contractualAmountContractual: number;
   previousAmountWorkedMonths: number;
   previousTotalPaid: number;
   requiredExperienceTime: number;

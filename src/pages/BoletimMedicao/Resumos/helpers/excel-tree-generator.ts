@@ -2,6 +2,8 @@ import {
   MeasurementReportExcel,
   MeasurementReportLine,
   MeasurementReportResume,
+  ReportBlockDTO,
+  ReportSubBlockDTO,
 } from '../../api/useGenerateMeasurementReport';
 
 import ExcelJS from 'exceljs';
@@ -26,7 +28,7 @@ export class ExcelTreeGenerator {
   ) {
     const workbook = new ExcelJS.Workbook();
 
-    await this.generateResumeworksheet(workbook, data.measurementReportResume);
+    await this.generateResumeworksheet(workbook, data);
 
     await this.generateDetailsWorksheet(
       workbook,
@@ -40,7 +42,10 @@ export class ExcelTreeGenerator {
 
   private static async generateResumeworksheet(
     workbook: ExcelJS.Workbook,
-    data: MeasurementReportResume,
+    {
+      measurementReportResume,
+      measurementReportDetails,
+    }: MeasurementReportExcel,
   ) {
     const worksheet = workbook.addWorksheet('Resumo');
 
@@ -55,11 +60,16 @@ export class ExcelTreeGenerator {
       { width: 20 },
     ];
 
-    createReadjustmentTable({ data, worksheet });
+    createReadjustmentTable({ data: measurementReportResume, worksheet });
     addEmptyRow(worksheet, 1);
 
-    createDivisionForEachCompanyTable({ data, worksheet });
+    createDivisionForEachCompanyTable({
+      data: measurementReportResume,
+      worksheet,
+    });
     addEmptyRow(worksheet, 3);
+
+    createSummaryTable({ data: measurementReportDetails, worksheet });
   }
 
   private static async generateDetailsWorksheet(
@@ -418,7 +428,7 @@ export class ExcelTreeGenerator {
   }
 }
 
-interface CreateReadjustmentTableParams {
+interface CommonResumeParams {
   data: MeasurementReportResume;
   worksheet: ExcelJS.Worksheet;
 }
@@ -429,10 +439,7 @@ function addEmptyRow(worksheet: ExcelJS.Worksheet, rowSpan: number = 1) {
   }
 }
 
-function createReadjustmentTable({
-  data,
-  worksheet,
-}: CreateReadjustmentTableParams) {
+function createReadjustmentTable({ data, worksheet }: CommonResumeParams) {
   const EMPTY_CELL = '';
 
   const INITIAL_MERGE_CELL = 6;
@@ -549,15 +556,10 @@ function createReadjustmentTable({
   });
 }
 
-interface CreateDivisionForEachCompanyTableParams {
-  data: MeasurementReportResume;
-  worksheet: ExcelJS.Worksheet;
-}
-
 function createDivisionForEachCompanyTable({
   data,
   worksheet,
-}: CreateDivisionForEachCompanyTableParams) {
+}: CommonResumeParams) {
   const EMPTY_CELL = '';
   const ENGECORPS_PERCENTAGE = 0.4;
   const SENNER_PERCENTAGE = 0.4;
@@ -663,4 +665,218 @@ function createDivisionForEachCompanyTable({
       };
     });
   }
+}
+
+interface CreateSummaryTable {
+  data: MeasurementReportLine;
+  worksheet: ExcelJS.Worksheet;
+}
+
+function createSummaryTable({ data, worksheet }: CreateSummaryTable) {
+  const EMPTY_CELL = '';
+
+  const columns = [
+    'Partida',
+    'Preço Unitário',
+    'Meses',
+    'Valor Total do Contrato',
+    'Multa 7.1',
+    'Multa 7.2',
+    'Total Medido',
+    'Saldo',
+  ];
+  const currencyColumnIndexes = [2, 4, 5, 6, 7, 8];
+
+  const headerRow = worksheet.addRow([
+    'CONTRATO',
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+  ]);
+
+  const baseStyle: Partial<ExcelJS.Style> = {
+    font: { bold: true },
+    alignment: {
+      horizontal: 'center',
+      vertical: 'middle',
+    },
+  };
+
+  worksheet.mergeCells(
+    `${headerRow.getCell(1).address}:${headerRow.getCell(columns.length).address}`,
+  );
+  headerRow.getCell(1).style = {
+    ...baseStyle,
+    fill: {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF91D2FF' },
+    },
+  };
+
+  const titleRow = worksheet.addRow(columns);
+  titleRow.eachCell({ includeEmpty: true }, (cell) => {
+    cell.style = {
+      ...baseStyle,
+      fill: {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFDAE9F8' },
+      },
+    };
+  });
+
+  function isAnemicBlock(child: ReportBlockDTO): child is ReportSubBlockDTO {
+    return 'lines' in child;
+  }
+
+  data.blocks.forEach((block) => {
+    const mainBlockRow = worksheet.addRow([
+      block.title,
+      block.totals.unitPriceContractual,
+      block.totals.amountMonthsContractual,
+      block.totals.contractualAmountContractual,
+      block.totals.amountFineExperience,
+      block.totals.amountFineMobilization,
+      block.totals.actualTotalPaid,
+      block.totals.balance,
+    ]);
+    mainBlockRow.height = 44;
+    mainBlockRow.eachCell({ includeEmpty: true }, (cell, columnIndex) => {
+      const cellStyle: Partial<ExcelJS.Style> = {
+        ...baseStyle,
+        alignment: {
+          horizontal: 'right',
+          vertical: 'middle',
+        },
+        fill: {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE8E8E8' },
+        },
+        border: {
+          top: { style: 'medium' },
+        },
+      };
+
+      if (columnIndex === 1) {
+        cellStyle.alignment = {
+          horizontal: 'center',
+          vertical: 'middle',
+          wrapText: true,
+        };
+      }
+
+      if (currencyColumnIndexes.includes(columnIndex)) {
+        cellStyle.numFmt = CURRENCY_FORMAT;
+      }
+
+      if (columnIndex === columns.length) {
+        cellStyle.border = {
+          ...cellStyle.border,
+          right: { style: 'medium' },
+        };
+      }
+
+      cell.style = cellStyle;
+    });
+
+    if (isAnemicBlock(block)) {
+      const [anemicBlockPrefix] = block.lines[0].code.split(' ');
+      const anemicBlockRow = worksheet.addRow([
+        anemicBlockPrefix,
+        block.totals.unitPriceContractual,
+        block.totals.amountMonthsContractual,
+        block.totals.contractualAmountContractual,
+        block.totals.amountFineExperience,
+        block.totals.amountFineMobilization,
+        block.totals.actualTotalPaid,
+        block.totals.balance,
+      ]);
+
+      anemicBlockRow.eachCell({ includeEmpty: true }, (cell, columnIndex) => {
+        if (currencyColumnIndexes.includes(columnIndex)) {
+          cell.numFmt = CURRENCY_FORMAT;
+        }
+
+        if (columnIndex === columns.length) {
+          cell.border = {
+            right: { style: 'medium' },
+          };
+        }
+      });
+    } else if (!!block.subBlocks) {
+      block.subBlocks.forEach((subBlock) => {
+        const [subBlockPrefix] = subBlock.lines[0].code.split(' ');
+        const subBlockRow = worksheet.addRow([
+          subBlockPrefix,
+          subBlock.totals.unitPriceContractual,
+          subBlock.totals.amountMonthsContractual,
+          subBlock.totals.contractualAmountContractual,
+          subBlock.totals.amountFineExperience,
+          subBlock.totals.amountFineMobilization,
+          subBlock.totals.actualTotalPaid,
+          subBlock.totals.balance,
+        ]);
+
+        subBlockRow.eachCell({ includeEmpty: true }, (cell, columnIndex) => {
+          if (currencyColumnIndexes.includes(columnIndex)) {
+            cell.numFmt = CURRENCY_FORMAT;
+          }
+
+          if (columnIndex === columns.length) {
+            cell.border = {
+              right: { style: 'medium' },
+            };
+          }
+        });
+      });
+    }
+  });
+
+  const totalRow = worksheet.addRow([
+    'Total Geral',
+    data.totals.unitPriceContractual,
+    data.totals.amountMonthsContractual,
+    data.totals.contractualAmountContractual,
+    data.totals.amountFineExperience,
+    data.totals.amountFineMobilization,
+    data.totals.actualTotalPaid,
+    data.totals.balance,
+  ]);
+
+  totalRow.eachCell({ includeEmpty: true }, (cell, columnIndex) => {
+    const cellStyle: Partial<ExcelJS.Style> = {
+      ...baseStyle,
+      alignment: {
+        horizontal: columnIndex === 1 ? 'left' : 'right',
+      },
+      fill: {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF91D2FF' },
+      },
+      border: {
+        top: { style: 'medium' },
+        bottom: { style: 'medium' },
+      },
+    };
+
+    if (currencyColumnIndexes.includes(columnIndex)) {
+      cellStyle.numFmt = CURRENCY_FORMAT;
+    }
+
+    if (columnIndex === columns.length) {
+      cellStyle.border = {
+        ...cellStyle.border,
+        right: { style: 'medium' },
+      };
+    }
+
+    cell.style = cellStyle;
+  });
 }

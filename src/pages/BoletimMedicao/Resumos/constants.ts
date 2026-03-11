@@ -64,7 +64,7 @@ export function getColumnConfig(
       header: 'Preço Unitário',
       width: 20,
       key: 'unitPriceContractual',
-      totalKey: 'unitPrice',
+      totalKey: 'unitPriceContractual',
       format: CURRENCY_FORMAT,
     },
     {
@@ -72,14 +72,14 @@ export function getColumnConfig(
       header: 'Meses',
       width: 10,
       key: 'amountMonthsContractual',
-      totalKey: 'amountMonths',
+      totalKey: 'amountMonthsContractual',
     },
     {
       group: 'Contrato',
       header: 'Valor Total do Contrato',
       width: 30,
       key: 'contractualAmountContractual',
-      totalKey: 'contractualAmount',
+      totalKey: 'contractualAmountContractual',
       format: CURRENCY_FORMAT,
     },
     {
@@ -416,7 +416,6 @@ export function createHeaderRow(
   const row = worksheet.addRow(rowValues);
   const rowIndex = row.number;
 
-  let textColumnsCount = 0;
   row.eachCell({ includeEmpty: true }, (cell, columnNumber) => {
     const columnConfig = columns[columnNumber - 1];
 
@@ -427,13 +426,7 @@ export function createHeaderRow(
     if (columnConfig.totalKey) {
       cell.numFmt = columnConfig.format ?? '';
     }
-
-    if (!columnConfig.totalKey) {
-      textColumnsCount = columnNumber;
-    }
   });
 
-  if (textColumnsCount > 1) {
-    worksheet.mergeCells(rowIndex, 1, rowIndex, textColumnsCount);
-  }
+  worksheet.mergeCells(rowIndex, 1, rowIndex, 6);
 }
