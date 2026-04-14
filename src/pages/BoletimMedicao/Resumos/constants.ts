@@ -87,6 +87,7 @@ export function getColumnConfig(
       header: 'Preço Unitário',
       width: 30,
       key: 'unitPrice',
+      totalKey: 'unitPrice',
       format: CURRENCY_FORMAT,
     },
     {
@@ -94,12 +95,14 @@ export function getColumnConfig(
       header: 'Meses',
       width: 10,
       key: 'amountMonths',
+      totalKey: 'amountMonths',
     },
     {
       group: 'SME',
       header: 'Valor Total do Contrato',
       width: 30,
       key: 'contractualAmount',
+      totalKey: 'contractualAmount',
       format: CURRENCY_FORMAT,
     },
     {
@@ -129,7 +132,6 @@ export function getColumnConfig(
       header: 'Experiência Mínima',
       width: 20,
       key: 'requiredExperienceTime',
-      totalKey: 'requiredExperienceTime',
       format: '0',
     },
     {
@@ -137,7 +139,6 @@ export function getColumnConfig(
       header: 'Experiência do Colaborador',
       width: 20,
       key: 'experienceTime',
-      totalKey: 'experienceTime',
       format: DECIMAL_NUMBER_FORMAT,
     },
     {
@@ -145,7 +146,6 @@ export function getColumnConfig(
       header: 'Diferença de Experiência',
       width: 30,
       key: 'experienceDifference',
-      totalKey: 'experienceDifference',
       format: DECIMAL_NUMBER_FORMAT,
     },
     {
@@ -153,7 +153,6 @@ export function getColumnConfig(
       header: 'Proporção de Dias Trabalhados',
       width: 30,
       key: 'proportionDaysWorked',
-      totalKey: 'proportionDaysWorked',
       format: '0.000',
     },
     {
@@ -161,7 +160,6 @@ export function getColumnConfig(
       header: '% Multa 7.1',
       width: 20,
       key: 'percentualFineExperience',
-      totalKey: 'percentualFineExperience',
       format: PERCENTAGE_FORMAT,
     },
     {
@@ -185,7 +183,6 @@ export function getColumnConfig(
       header: '% Multa 7.2',
       width: 20,
       key: 'percentualFineMobilization',
-      totalKey: 'percentualFineMobilization',
       format: PERCENTAGE_FORMAT,
     },
     {

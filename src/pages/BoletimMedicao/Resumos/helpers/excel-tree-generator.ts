@@ -16,6 +16,8 @@ import {
   GroupVariant,
   StyleType,
 } from '../constants';
+import { format, isValid, parseISO } from 'date-fns';
+import { toDate } from '@/utils/dates';
 
 export class ExcelTreeGenerator {
   // Constante de altura do cabeçalho (3 linhas: Grupo, Header, Chave/Vazio)
@@ -301,15 +303,8 @@ export class ExcelTreeGenerator {
                 let value = line[column.key as keyof typeof line];
 
                 // Tratamento de Datas
-                if (
-                  value instanceof Date ||
-                  (typeof value === 'string' && value.includes('T'))
-                ) {
-                  const dateValue = new Date(value);
-                  if (!isNaN(dateValue.getTime())) {
-                    value = dateValue.toLocaleDateString('pt-BR');
-                    return value; // Retorna string formatada
-                  }
+                if (typeof value === 'string' && isValid(parseISO(value))) {
+                  value = format(toDate(value), 'dd/MM/yyyy');
                 }
 
                 // Tratamento de Números
@@ -355,13 +350,9 @@ export class ExcelTreeGenerator {
           const rowValues = columns.map((column) => {
             // Lógica de extração de valor idêntica...
             let value: any = child[column.key as keyof typeof child];
-            if (
-              value instanceof Date ||
-              (typeof value === 'string' && value.includes('T'))
-            ) {
-              const dateValue = new Date(value);
-              if (!isNaN(dateValue.getTime()))
-                value = dateValue.toLocaleDateString('pt-BR');
+
+            if (typeof value === 'string' && isValid(parseISO(value))) {
+              value = format(toDate(value), 'dd/MM/yyyy');
             }
             if (column.format) {
               const isNullish =
@@ -420,7 +411,6 @@ export class ExcelTreeGenerator {
     anchor.download = fileName;
 
     document.body.appendChild(anchor);
-    console.log('aqui');
     anchor.click();
 
     document.body.removeChild(anchor);
