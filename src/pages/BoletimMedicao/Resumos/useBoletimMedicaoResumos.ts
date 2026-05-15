@@ -54,17 +54,15 @@ export function useBoletimMedicaoResumos() {
   }, [isDeletingResumo]);
 
   useEffect(() => {
-    if (!isFetching) {
-      setMeasurementReportNumber(null);
-    }
-    if (data) {
+    if (measurementReportNumber && data) {
       ExcelTreeGenerator.generate(
         data,
         measurementReportNumber!,
         `Relatório de Medição ${measurementReportNumber}.xlsx`,
       );
+      setMeasurementReportNumber(null);
     }
-  }, [isFetching]);
+  }, [data, measurementReportNumber]);
 
   const handleResumoBeingDeleted = (id: number) => setResumoBeingDeleted(id);
 
@@ -80,6 +78,8 @@ export function useBoletimMedicaoResumos() {
     ...getResumos,
     shouldShowDeleteModal: Boolean(resumoBeingDeleted),
     isDeletingResumo,
+    isFetching,
+    measurementReportNumber,
     handleResumoBeingDeleted,
     handleConfirmDelete,
     handleCancelDelete,

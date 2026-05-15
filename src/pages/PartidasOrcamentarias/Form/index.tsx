@@ -9,6 +9,8 @@ import { useState } from 'react';
 import { DesmobilizarPessoaDialog } from './DesmobilizarPessoaDialog';
 import { toDate } from '@/utils/dates';
 import { formatCurrency } from '@/utils/currency';
+import { Link } from 'react-router';
+import { cn } from '@/lib/utils';
 
 export function PartidasOrcamentariasForm() {
   const {
@@ -19,7 +21,8 @@ export function PartidasOrcamentariasForm() {
     pessoasOptions,
     isFetchingPessoasOptions,
     control,
-    currentMobilizedPessoa,
+    currentPartidaOrcamentaria,
+    currentMobilizedPerson,
     currentQuantidadeMeses,
     currentDataMobilizacaoPrevista,
     currentPrecoUnitario,
@@ -109,7 +112,7 @@ export function PartidasOrcamentariasForm() {
           </span>
 
           {currentQuantidadeMeses && currentDataMobilizacaoPrevista && (
-            <span className="text-sm">
+            <span className={cn('text-sm', isFieldsDisabled && 'opacity-50')}>
               {format(
                 addMonths(
                   currentDataMobilizacaoPrevista,
@@ -130,13 +133,13 @@ export function PartidasOrcamentariasForm() {
           />
         </div>
 
-        <div className="relative col-span-2 flex items-center rounded-md border-zinc-50 pl-3 text-left font-normal shadow-sm">
+        <div className="relative col-span-2 flex h-9 items-center rounded-md border-zinc-50 pl-3 text-left font-normal shadow-sm">
           <span className="pointer-events-none absolute top-0 left-1.5 z-10 -translate-y-1/2 bg-white px-2 text-xs text-zinc-700 opacity-70 transition-all peer-valid:top-0 peer-valid:left-1.5 peer-valid:text-xs">
             Montante Contratual
           </span>
 
           {currentQuantidadeMeses && currentPrecoUnitario && (
-            <span className="text-sm">
+            <span className={cn('text-sm', isFieldsDisabled && 'opacity-50')}>
               {formatCurrency(
                 parseInt(currentQuantidadeMeses) *
                   parseFloat(currentPrecoUnitario.replace(',', '.')),
@@ -150,6 +153,25 @@ export function PartidasOrcamentariasForm() {
             control={control}
             name="tempoExperienciaRequisitado"
             label="Experiência mínima"
+            onlyNumbers
+            disabled={isFieldsDisabled}
+          />
+        </div>
+
+        <div className="col-span-3">
+          <Input.Date
+            control={control}
+            name="dataSME"
+            label="Data da SME"
+            disabled={isFieldsDisabled}
+          />
+        </div>
+
+        <div className="col-span-3">
+          <Input.Text
+            control={control}
+            name="numeroSME"
+            label="Número da SME"
             onlyNumbers
             disabled={isFieldsDisabled}
           />
@@ -170,11 +192,11 @@ export function PartidasOrcamentariasForm() {
               isDisabledChangePessoa
             }
           />
-          {currentMobilizedPessoa?.dataDesmobilizacaoReal && (
+          {currentMobilizedPerson?.dataDesmobilizacaoReal && (
             <small className="mt-2 ml-4 inline-block text-xs">
               Será desmobilizado em:{' '}
               {format(
-                toDate(currentMobilizedPessoa.dataDesmobilizacaoReal),
+                toDate(currentMobilizedPerson.dataDesmobilizacaoReal),
                 'dd/MM/yyyy',
               )}
             </small>
@@ -247,6 +269,53 @@ export function PartidasOrcamentariasForm() {
           </div>
         </div>
       )}
+
+      {currentPartidaOrcamentaria &&
+        currentPartidaOrcamentaria.isCurrent &&
+        currentPartidaOrcamentaria.history.length > 0 && (
+          <div className="mt-8 rounded-lg border p-4">
+            <strong className="mb-4 block">Histórico de Versões</strong>
+            <div className="max-h-[576px] space-y-4 overflow-auto">
+              {currentPartidaOrcamentaria.history.map(
+                ({ id, dataSME, numeroSME, isOriginal }) => (
+                  <Link
+                    key={id}
+                    to={`/siscontrol/partidas-orcamentarias/atualizar/${id}`}
+                    className="block hover:underline"
+                  >
+                    <p className="text-sm font-semibold *:font-normal">
+                      Versão: <span>{isOriginal ? 'Original' : numeroSME}</span>{' '}
+                      {!isOriginal && dataSME && (
+                        <>
+                          | Data da SME:{'  '}
+                          <span>{format(toDate(dataSME), 'dd/MM/yyyy')}</span>
+                        </>
+                      )}
+                    </p>
+                  </Link>
+                ),
+              )}
+            </div>
+          </div>
+        )}
+
+      {currentPartidaOrcamentaria &&
+        !currentPartidaOrcamentaria.isCurrent &&
+        currentPartidaOrcamentaria.current && (
+          <div className="mt-8 rounded-lg border p-4">
+            <strong className="mb-4 block">Histórico de Versões</strong>
+            <div className="max-h-[576px] space-y-4 overflow-auto">
+              <Link
+                to={`/siscontrol/partidas-orcamentarias/atualizar/${currentPartidaOrcamentaria.current.id}`}
+                className="hover:underline"
+              >
+                <p className="text-sm font-semibold *:font-normal">
+                  Versão: <span>Vigente</span>
+                </p>
+              </Link>
+            </div>
+          </div>
+        )}
 
       <DesmobilizarPessoaDialog
         isVisible={isDesmobilizarPessoaDialogVisible}

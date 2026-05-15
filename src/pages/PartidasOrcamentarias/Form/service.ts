@@ -19,12 +19,10 @@ export function getPartidaOrcamentaria(
 
 export function updatePartidaOrcamentaria(
   partidaOrcamentariaId: number,
-  data: PartidaOrcamentariaForm,
+  data: Partial<PartidaOrcamentariaForm>,
 ): Promise<void> {
   return api.patch(`/partidas-orcamentarias/${partidaOrcamentariaId}`, {
     ...data,
-    dataSME: new Date(),
-    numeroSME: 1,
   });
 }
 

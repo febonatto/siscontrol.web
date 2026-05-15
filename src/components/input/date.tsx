@@ -98,7 +98,7 @@ export function InputDate<T extends FieldValues>({
       </Popover>
 
       {shouldDisplayError && (
-        <span className="text-destructive inline-block text-xs leading-snug">
+        <span className="text-destructive inline-block text-xs leading-snug italic">
           {error.message}
         </span>
       )}

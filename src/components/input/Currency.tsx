@@ -39,6 +39,7 @@ export function InputCurrency<T extends FieldValues>({
           maxLength={10}
           disableAbbreviations
           onValueChange={(value) => onChange(value)}
+          disabled={disabled}
           required
         />
         <span

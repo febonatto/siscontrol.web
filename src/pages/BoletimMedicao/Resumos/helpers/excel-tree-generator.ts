@@ -1,620 +1,872 @@
 import {
-  MeasurementReportDetailLine,
-  MeasurementReportDetailLineExcel,
-  ReportTotals,
+  MeasurementReportExcel,
+  MeasurementReportLine,
+  MeasurementReportResume,
+  ReportBlockDTO,
+  ReportSubBlockDTO,
 } from '../../api/useGenerateMeasurementReport';
 
-import * as xlsx from 'xlsx-js-style';
-
-interface ColumnConfig {
-  header: string;
-  key: keyof MeasurementReportDetailLine;
-  width: number;
-
-  rowSpan?: number;
-  group?: string;
-
-  subKey?: string;
-  totalKey?: string;
-  isText?: boolean;
-  format?: string;
-}
+import ExcelJS from 'exceljs';
+import {
+  applyStylesToCell,
+  createHeaderRow,
+  CURRENCY_FORMAT,
+  getColumnConfig,
+  getStyle,
+  GroupVariant,
+  StyleType,
+} from '../constants';
+import { format, isValid, parseISO } from 'date-fns';
+import { toDate } from '@/utils/dates';
 
 export class ExcelTreeGenerator {
+  // Constante de altura do cabeçalho (3 linhas: Grupo, Header, Chave/Vazio)
   private static readonly HEADER_HEIGHT: number = 3;
-  private static readonly COLUMNS = (
-    measurementReportNumber: number,
-  ): ColumnConfig[] => [
-    {
-      header: 'Cod. Partida',
-      key: 'code',
-      width: 20,
-      rowSpan: 3,
-    },
-    {
-      header: 'Serviço',
-      key: 'service',
-      width: 50,
-      rowSpan: 3,
-    },
-    {
-      header: 'Aeroporto',
-      key: 'acronym',
-      width: 15,
-      rowSpan: 3,
-    },
-    {
-      header: 'Colaborador',
-      key: 'fullName',
-      width: 40,
-      rowSpan: 3,
-    },
-    {
-      header: 'Data de Mobilização',
-      key: 'actualMobilizationDate',
-      width: 30,
-      rowSpan: 3,
-    },
-    {
-      header: 'Data de Desmobilização',
-      key: 'actualDemobilizationDate',
-      width: 30,
-      rowSpan: 3,
-    },
-    {
-      header: 'Preço Unitário',
-      key: 'unitPrice',
-      width: 15,
-      group: 'CONTRATO',
-      totalKey: 'unitPrice',
-      format: '"R$"\ #,##0.00',
-    },
-    {
-      header: 'Meses',
-      key: 'amountMonths',
-      width: 10,
-      group: 'CONTRATO',
-      totalKey: 'amountMonths',
-    },
-    {
-      header: 'Valor Total do Contrato',
-      key: 'contractualAmount',
-      width: 30,
-      group: 'CONTRATO',
-      totalKey: 'contractualAmount',
-      format: '"R$"\ #,##0.00',
-    },
-    {
-      header: 'Preço Unitário',
-      key: 'smeUnitPrice',
-      width: 15,
-      group: 'SME',
-      totalKey: 'smeUnitPrice',
-      format: '"R$"\ #,##0.00',
-    },
-    {
-      header: 'Meses',
-      key: 'smeAmountMonths',
-      width: 10,
-      group: 'SME',
-      totalKey: 'smeAmountMonths',
-    },
-    {
-      header: 'Valor Total do Contrato',
-      key: 'smeContractualAmount',
-      width: 30,
-      group: 'SME',
-      totalKey: 'smeContractualAmount',
-      format: '"R$"\ #,##0.00',
-    },
-    {
-      header: 'Quantidade',
-      key: 'previousAmountWorkedMonths',
-      width: 15,
-      group: 'ACUMULADO ANTERIOR',
-      totalKey: 'previousAmountWorkedMonths',
-      format: '0.00',
-    },
-    {
-      header: 'R$',
-      key: 'previousTotalPaid',
-      width: 20,
-      group: 'ACUMULADO ANTERIOR',
-      totalKey: 'previousTotalPaid',
-      format: '"R$"\ #,##0.00',
-    },
-    {
-      header: 'Experiência Mínima',
-      key: 'requiredExperienceTime',
-      width: 20,
-      group: `MEDIÇÃO ${measurementReportNumber}`,
-      totalKey: 'requiredExperienceTime',
-    },
-    {
-      header: 'Experiência do Colaborador',
-      key: 'experienceTime',
-      width: 30,
-      group: `MEDIÇÃO ${measurementReportNumber}`,
-      totalKey: 'experienceTime',
-      format: '0.00',
-    },
-    {
-      header: 'Diferença de Experiência',
-      key: 'experienceDifference',
-      width: 30,
-      group: `MEDIÇÃO ${measurementReportNumber}`,
-      totalKey: 'experienceDifference',
-      format: '0.00',
-    },
-    {
-      header: 'Proporção de Dias Trabalhados',
-      key: 'amountMonths',
-      width: 30,
-      group: `MEDIÇÃO ${measurementReportNumber}`,
-      totalKey: 'proportionDaysWorked',
-    },
-    {
-      header: '% Multa 7.1',
-      key: 'percentualFineExperience',
-      width: 20,
-      group: `MEDIÇÃO ${measurementReportNumber}`,
-      totalKey: 'percentualFineExperience',
-    },
-    {
-      header: 'Multa 7.1',
-      key: 'amountFineExperience',
-      width: 20,
-      group: `MEDIÇÃO ${measurementReportNumber}`,
-      totalKey: 'amountFineExperience',
-      format: '"R$"\ #,##0.00',
-    },
-    {
-      header: 'Valor da Medição',
-      key: 'measurementReportValue',
-      width: 30,
-      group: `MEDIÇÃO ${measurementReportNumber}`,
-      totalKey: 'measurementReportValue',
-      format: '"R$"\ #,##0.00',
-    },
-    {
-      header: '% Multa 7.2',
-      key: 'percentualFineMobilization',
-      width: 20,
-      group: `MEDIÇÃO ${measurementReportNumber}`,
-      totalKey: 'percentualFineMobilization',
-    },
-    {
-      header: 'Multa 7.2',
-      key: 'amountFineMobilization',
-      width: 20,
-      group: `MEDIÇÃO ${measurementReportNumber}`,
-      totalKey: 'amountFineMobilization',
-      format: '"R$"\ #,##0.00',
-    },
-    {
-      header: 'Valor Real da Medição',
-      key: 'actualMeasurementReportValue',
-      width: 30,
-      group: `MEDIÇÃO ${measurementReportNumber}`,
-      totalKey: 'actualMeasurementReportValue',
-      format: '"R$"\ #,##0.00',
-    },
-    {
-      header: 'Total de Meses Medidos',
-      key: 'actualAmountWorkedMonths',
-      width: 30,
-      group: 'ACUMULADO ATUAL',
-      totalKey: 'actualAmountWorkedMonths',
-      format: '0.00',
-    },
-    {
-      header: 'Total Medido',
-      key: 'actualTotalPaid',
-      width: 30,
-      group: 'ACUMULADO ATUAL',
-      totalKey: 'actualTotalPaid',
-      format: '"R$"\ #,##0.00',
-    },
-    {
-      header: 'Saldo de Meses',
-      key: 'balanceMonths',
-      width: 30,
-      group: 'SALDO',
-      totalKey: 'balanceMonths',
-      format: '0.00',
-    },
-    {
-      header: 'Saldo',
-      key: 'balance',
-      width: 30,
-      group: 'SALDO',
-      totalKey: 'balance',
-      format: '"R$"\ #,##0.00',
-    },
-  ];
-  private static STYLES = {
-    fixedHeader: {
-      fill: { fgColor: { rgb: '90EE90' } },
-      font: { bold: true, sz: 11, color: { rgb: '000000' } },
-      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-      border: {
-        bottom: { style: 'thin' },
-        right: { style: 'thin' },
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-      },
-    },
-    groupTitleYellow: {
-      fill: { fgColor: { rgb: 'FFFF00' } },
-      font: { bold: true, sz: 11 },
-      alignment: { horizontal: 'center', vertical: 'center' },
-      border: {
-        top: { style: 'thin' },
-        right: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-      },
-    },
-    groupTitleGreen: {
-      fill: { fgColor: { rgb: '90EE90' } },
-      font: { bold: true, sz: 11 },
-      alignment: { horizontal: 'center', vertical: 'center' },
-      border: {
-        top: { style: 'thin' },
-        right: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-      },
-    },
-    subHeaderYellow: {
-      fill: { fgColor: { rgb: 'FFFF00' } },
-      font: { bold: true, sz: 11 },
-      alignment: { horizontal: 'center', vertical: 'center' },
-      border: {
-        bottom: { style: 'thin' },
-        right: { style: 'thin' },
-        left: { style: 'thin' },
-      },
-    },
-    subHeaderGreen: {
-      fill: { fgColor: { rgb: '90EE90' } },
-      font: { bold: true, sz: 11 },
-      alignment: { horizontal: 'center', vertical: 'center' },
-      border: {
-        bottom: { style: 'thin' },
-        right: { style: 'thin' },
-        left: { style: 'thin' },
-      },
-    },
-    grandTotal: {
-      fill: { fgColor: { rgb: 'F0F0F0' } },
-      font: { bold: true },
-      alignment: { horizontal: 'right', vertical: 'center' },
-      border: {
-        bottom: { style: 'medium' },
-        right: { style: 'thin' },
-        left: { style: 'thin' },
-      },
-    },
-    mainBlock: {
-      fill: { fgColor: { rgb: 'A9A9A9' } },
-      font: { bold: true, sz: 12 },
-      alignment: { horizontal: 'right' },
-      border: { top: { style: 'medium' }, bottom: { style: 'medium' } },
-    },
-    mainBlockTitle: {
-      fill: { fgColor: { rgb: 'A9A9A9' } },
-      font: { bold: true, sz: 13 },
-      alignment: { horizontal: 'left', vertical: 'center' },
-      border: { top: { style: 'medium' }, bottom: { style: 'medium' } },
-    },
-    subBlock: {
-      fill: { fgColor: { rgb: 'D3D3D3' } },
-      font: { bold: true },
-      alignment: { horizontal: 'right' },
-      border: { bottom: { style: 'thin' } },
-    },
-    subBlockTitle: {
-      fill: { fgColor: { rgb: 'D3D3D3' } },
-      font: { bold: true },
-      alignment: { horizontal: 'left' },
-      border: { bottom: { style: 'thin' } },
-    },
-    data: {
-      alignment: { horizontal: 'left' },
-      border: { bottom: { style: 'thin', color: { rgb: 'E0E0E0' } } },
-    },
-    dataNumber: {
-      alignment: { horizontal: 'right' },
-      border: { bottom: { style: 'thin', color: { rgb: 'E0E0E0' } } },
-    },
-  };
 
-  static generate(
-    data: MeasurementReportDetailLineExcel[],
+  static async generate(
+    data: MeasurementReportExcel,
     measurementReportNumber: number,
     fileName: string,
   ) {
-    const workbook = xlsx.utils.book_new();
-    const columns = this.COLUMNS(measurementReportNumber);
-    const rows: unknown[][] = [];
-    const merges: xlsx.Range[] = [];
+    const workbook = new ExcelJS.Workbook();
 
-    const firstRow: unknown[] = [];
-    const secondRow: unknown[] = [];
-    const thirdRow: unknown[] = [];
+    await this.generateResumeworksheet(workbook, data);
+
+    await this.generateDetailsWorksheet(
+      workbook,
+      measurementReportNumber,
+      data.measurementReportDetails,
+      `BM${measurementReportNumber}`,
+    );
+
+    await this.downloadWorkbook(workbook, fileName);
+  }
+
+  private static async generateResumeworksheet(
+    workbook: ExcelJS.Workbook,
+    {
+      measurementReportResume,
+      measurementReportDetails,
+    }: MeasurementReportExcel,
+  ) {
+    const worksheet = workbook.addWorksheet('Resumo');
+
+    worksheet.columns = [
+      { width: 39 },
+      { width: 39 },
+      { width: 25 },
+      { width: 30 },
+      { width: 30 },
+      { width: 30 },
+      { width: 30 },
+      { width: 20 },
+    ];
+
+    createReadjustmentTable({ data: measurementReportResume, worksheet });
+    addEmptyRow(worksheet, 1);
+
+    createDivisionForEachCompanyTable({
+      data: measurementReportResume,
+      worksheet,
+    });
+    addEmptyRow(worksheet, 3);
+
+    createSummaryTable({ data: measurementReportDetails, worksheet });
+  }
+
+  private static async generateDetailsWorksheet(
+    workbook: ExcelJS.Workbook,
+    measurementReportNumber: number,
+    data: MeasurementReportLine,
+    sheetName: string,
+  ) {
+    // 1. Criação do Workbook e Worksheet
+    const worksheet = workbook.addWorksheet(sheetName, {
+      views: [
+        {
+          state: 'frozen',
+          xSplit: 0, // Não trava colunas
+          ySplit: 2, // Trava as 2 primeiras linhas (Linhas 1 e 2 ficam fixas)
+          topLeftCell: 'A3', // A primeira célula que rola é a A3 (Logo abaixo da trava)
+          activeCell: 'A1',
+        },
+      ],
+    });
+
+    const columns = getColumnConfig(measurementReportNumber);
+
+    // 2. Definição da Largura das Colunas
+    // ExcelJS usa 'width' (aproximadamente caracteres).
+    worksheet.columns = columns.map((col) => ({
+      key: col.key, // Usado internamente se quisermos acessar por chave
+      width: col.width, // Ajuste empírico: xlsx usa pixels/pontos, exceljs usa chars. Dividindo por ~7 para aproximar
+    }));
+
+    // Variáveis para construção do cabeçalho
+    const firstRowValues: string[] = [];
+    const secondRowValues: string[] = [];
+    const thirdRowValues: (number | null)[] = [];
+
+    // Arrays para guardar metadados de estilos de cada célula do cabeçalho
+    const firstRowStyles: { type: StyleType; groupVariant?: GroupVariant }[] =
+      [];
+    const secondRowStyles: { type: StyleType; groupVariant?: GroupVariant }[] =
+      [];
+    const thirdRowStyles: { type: StyleType; groupVariant?: GroupVariant }[] =
+      [];
+
+    // Arrays para guardar as definições de merge
+    const merges: {
+      s: { r: number; c: number };
+      e: { r: number; c: number };
+    }[] = [];
 
     let currentGroup = '';
     let groupStartIndex = 0;
 
+    // 3. Lógica de Construção dos Arrays de Cabeçalho (Igual à original)
     columns.forEach((column, index) => {
+      // Índice baseado em 0 para lógica, mas ExcelJS usa 1-based para colunas/linhas na hora de merge
+
       if (column.rowSpan && column.rowSpan > 1) {
+        // Fechamento de grupo anterior se houver
         if (currentGroup) {
           merges.push({
-            s: {
-              r: 0,
-              c: groupStartIndex,
-            },
-            e: {
-              r: 0,
-              c: index - 1,
-            },
+            s: { r: 1, c: groupStartIndex + 1 }, // Linha 1
+            e: { r: 1, c: index }, // Até coluna anterior (index é atual, anterior é index-1+1 = index no exceljs logic?) -> index é 0-based. Col excel é index+1. Col anterior é index.
           });
           currentGroup = '';
         }
 
-        firstRow.push({
-          v: column.header,
-          s: this.STYLES.fixedHeader,
-        });
-        secondRow.push({
-          v: '',
-          s: this.STYLES.fixedHeader,
-        });
-        thirdRow.push({
-          v: '',
-          s: this.STYLES.fixedHeader,
-        });
+        // Adiciona valores e estilos
+        firstRowValues.push(column.header);
+        firstRowStyles.push({ type: 'simpleHeader' });
 
+        secondRowValues.push('');
+        secondRowStyles.push({ type: 'simpleHeader' });
+
+        thirdRowValues.push(null);
+        thirdRowStyles.push({ type: 'simpleHeader' });
+
+        // Merge Vertical (RowSpan)
+        // Linhas 1 a 3 (baseado em HEADER_HEIGHT=3), Coluna index+1
         merges.push({
-          s: {
-            r: 0,
-            c: index,
-          },
-          e: {
-            r: column.rowSpan - 1,
-            c: index,
-          },
+          s: { r: 1, c: index + 1 },
+          e: { r: column.rowSpan, c: index + 1 },
         });
       } else {
+        // Lógica de Grupo
         if (column.group !== currentGroup) {
           if (currentGroup) {
+            // Fecha merge do grupo anterior
             merges.push({
-              s: {
-                r: 0,
-                c: groupStartIndex,
-              },
-              e: {
-                r: 0,
-                c: index - 1,
-              },
+              s: { r: 1, c: groupStartIndex + 1 },
+              e: { r: 1, c: index }, // Coluna anterior
             });
           }
 
           currentGroup = column.group!;
           groupStartIndex = index;
 
-          firstRow.push({
-            v: currentGroup,
-            s: currentGroup.includes('MEDIÇÃO')
-              ? this.STYLES.groupTitleGreen
-              : this.STYLES.groupTitleYellow,
+          const isMeasurementGroup = currentGroup
+            .toLocaleLowerCase()
+            .includes('medição');
+
+          firstRowValues.push(currentGroup.toUpperCase());
+          firstRowStyles.push({
+            type: 'groupTitle',
+            groupVariant: isMeasurementGroup ? 'green' : 'yellow',
           });
         } else {
-          firstRow.push({
-            v: '',
-            s: currentGroup.includes('MEDIÇÃO')
-              ? this.STYLES.groupTitleGreen
-              : this.STYLES.groupTitleYellow,
+          const isMeasurementGroup = currentGroup
+            .toLocaleLowerCase()
+            .includes('medição');
+          firstRowValues.push('');
+          firstRowStyles.push({
+            type: 'groupTitle',
+            groupVariant: isMeasurementGroup ? 'green' : 'yellow',
           });
         }
 
-        secondRow.push({
-          v: column.header,
-          s: currentGroup.includes('MEDIÇÃO')
-            ? this.STYLES.subHeaderGreen
-            : this.STYLES.subHeaderYellow,
+        const isMeasurementGroup = currentGroup
+          .toLocaleLowerCase()
+          .includes('medição');
+
+        secondRowValues.push(column.header);
+        secondRowStyles.push({
+          type: 'groupSubtitle',
+          groupVariant: isMeasurementGroup ? 'green' : 'yellow',
         });
-        thirdRow.push({
-          v: column.key,
-        });
+
+        // Terceira linha (vazia visualmente, usada para chave interna ou espaçamento)
+        thirdRowValues.push(
+          data.totals[column.totalKey as keyof typeof data.totals],
+        );
+        thirdRowStyles.push({
+          type: 'groupSubtitle',
+          groupVariant: isMeasurementGroup ? 'green' : 'yellow',
+        }); // Usando estilo do subheader para manter consistência ou 'fixedHeader' se fosse o caso. No original não tinha estilo explícito na row3 do else, assumindo padrão. Vou manter limpo ou aplicar borda.
+        // O original aplicava style na first e second row. Third row recebia apenas valor column.key, sem style explícito no `push`.
       }
     });
 
+    // Fecha último grupo se houver
     if (currentGroup) {
       merges.push({
-        s: {
-          r: 0,
-          c: groupStartIndex,
-        },
-        e: {
-          r: 0,
-          c: columns.length - 1,
-        },
+        s: { r: 1, c: groupStartIndex + 1 },
+        e: { r: 1, c: columns.length },
       });
     }
 
-    rows.push(firstRow, secondRow, thirdRow);
-    let startDataRowIndex = this.HEADER_HEIGHT;
-    const mainBlockIndexes: number[] = [];
+    // 4. Adiciona as linhas de cabeçalho ao Worksheet
+    const row1 = worksheet.addRow(firstRowValues);
+    const row2 = worksheet.addRow(secondRowValues);
+    const row3 = worksheet.addRow(thirdRowValues);
 
-    data.forEach((item, index) => {
-      this.addBlockHeaderRow(
-        columns,
-        rows,
-        item.title,
-        item.totals,
-        'mainBlock',
-        merges,
-        startDataRowIndex,
-      );
-      startDataRowIndex++;
-      mainBlockIndexes.push(startDataRowIndex);
+    // 5. Aplica Estilos aos Cabeçalhos
+    // Iteramos célula a célula para aplicar o estilo correto guardado nos arrays
+    row1.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      const styleName = firstRowStyles[colNumber - 1];
+      if (styleName)
+        applyStylesToCell(
+          cell,
+          getStyle({
+            type: styleName.type,
+            groupVariant: styleName.groupVariant,
+          }),
+        );
+    });
+    row2.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      const styleName = secondRowStyles[colNumber - 1];
+      if (styleName)
+        applyStylesToCell(
+          cell,
+          getStyle({
+            type: styleName.type,
+            groupVariant: styleName.groupVariant,
+          }),
+        );
+    });
+    row3.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      const columnConfig = columns[colNumber - 1];
+      const styleName = thirdRowStyles[colNumber - 1];
+      if (styleName)
+        applyStylesToCell(cell, {
+          font: {
+            bold: true,
+            size: 12,
+          },
+        });
+
+      if (columnConfig.format && typeof cell.value === 'number') {
+        cell.numFmt = columnConfig.format;
+      }
+    });
+    // Row 3 no original (parte do else) não tinha estilo definido explicitamente exceto para fixed cols.
+    // Vamos manter sem estilo específico para as não-fixas, ou replicar borda inferior.
+
+    // 6. Aplica Merges do Cabeçalho
+    merges.forEach((merge) => {
+      worksheet.mergeCells(merge.s.r, merge.s.c, merge.e.r, merge.e.c);
+    });
+
+    // 7. Processamento dos Dados
+    let currentRowIndex = this.HEADER_HEIGHT + 1; // Começa na linha 4 (ExcelJS é 1-based)
+    const mainBlockRowIndexes: number[] = [];
+
+    data.blocks.forEach((item) => {
+      // Adiciona Header do Bloco Principal
+      createHeaderRow(worksheet, columns, item.title, item.totals, 'mainBlock');
+      // Registra índice para ajuste de altura posterior (currentRowIndex é o índice da linha recém adicionada)
+      // addBlockHeaderRow adiciona uma linha e incrementa o contador interno da worksheet? Não, precisamos controlar.
+      // O método addBlockHeaderRow vai fazer worksheet.addRow.
+      mainBlockRowIndexes.push(currentRowIndex);
+      currentRowIndex++;
 
       const children = item.lines ?? item.subBlocks ?? [];
 
       children.forEach((child) => {
         if ('lines' in child) {
-          this.addBlockHeaderRow(
+          // Sub-bloco com linhas
+          createHeaderRow(
+            worksheet,
             columns,
-            rows,
             child.title,
             child.totals,
             'subBlock',
-            merges,
-            startDataRowIndex,
           );
-          startDataRowIndex++;
+          currentRowIndex++;
 
           if (child.lines.length > 0) {
             child.lines.forEach((line) => {
-              const rowData = columns.map((column) => {
-                let value: any = line[column.key as keyof typeof line];
+              const rowValues = columns.map((column) => {
+                let value = line[column.key as keyof typeof line];
 
-                if (
-                  value instanceof Date ||
-                  (typeof value === 'string' && value.includes('T'))
-                ) {
-                  const dateValue = new Date(value);
-                  if (!isNaN(dateValue.getTime())) {
-                    value = dateValue.toLocaleDateString('pt-BR');
-                  }
+                // Tratamento de Datas
+                if (typeof value === 'string' && isValid(parseISO(value))) {
+                  value = format(toDate(value), 'dd/MM/yyyy');
                 }
 
+                // Tratamento de Números
                 if (column.format) {
-                  const numValue = Number(value);
+                  const isNullish =
+                    value === null || value === undefined || value === '';
 
-                  if (!isNaN(numValue)) {
-                    return {
-                      v: numValue,
-                      t: 'n',
-                      z: column.format,
-                    };
+                  if (isNullish) {
+                    return column.group === 'SME' || column.group === 'Contrato'
+                      ? null
+                      : 0;
                   }
+
+                  const numValue = Number(value);
+                  if (!isNaN(numValue)) return numValue;
                 }
 
-                return {
-                  v: value ?? '',
-                };
+                return value || '';
               });
 
-              rows.push(rowData);
-              startDataRowIndex++;
+              // Adiciona linha de dados
+              const dataRow = worksheet.addRow(rowValues);
+
+              // Formatação de Células de Dados
+              dataRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                const columnConfig = columns[colNumber - 1];
+
+                // Aplica formato numérico se existir
+                if (columnConfig.format && typeof cell.value === 'number') {
+                  cell.numFmt = columnConfig.format; // Remove escapes do xlsx (ex: \"R$\") se necessário, ExcelJS usa padrão Excel direto
+                  // Ajuste formato para ExcelJS: '"R$" #,##0.00' funciona.
+                }
+
+                // Aplica alinhamento e bordas
+                applyStylesToCell(cell, getStyle({ type: 'data' }));
+              });
+
+              currentRowIndex++;
             });
           }
         } else {
-          const rowData = columns.map((column) => {
+          // Caso onde não tem 'lines' (estrutura plana ou diferente) - similar ao anterior
+          const rowValues = columns.map((column) => {
+            // Lógica de extração de valor idêntica...
             let value: any = child[column.key as keyof typeof child];
 
-            if (
-              value instanceof Date ||
-              (typeof value === 'string' && value.includes('T'))
-            ) {
-              const dateValue = new Date(value);
-              if (!isNaN(dateValue.getTime())) {
-                value = dateValue.toLocaleDateString('pt-BR');
-              }
+            if (typeof value === 'string' && isValid(parseISO(value))) {
+              value = format(toDate(value), 'dd/MM/yyyy');
             }
-
             if (column.format) {
-              const numValue = Number(value);
+              const isNullish =
+                value === null || value === undefined || value === '';
 
-              if (!isNaN(numValue)) {
-                return {
-                  v: numValue,
-                  t: 'n',
-                  z: column.format,
-                };
+              if (isNullish) {
+                return column.group === 'SME' || column.group === 'Contrato'
+                  ? null
+                  : 0;
               }
-            }
 
-            return {
-              v: value ?? '',
-            };
+              const numValue = Number(value);
+              if (!isNaN(numValue)) return numValue;
+            }
+            return value || '';
           });
 
-          rows.push(rowData);
-          startDataRowIndex++;
+          const dataRow = worksheet.addRow(rowValues);
+          dataRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+            const columnConfig = columns[colNumber - 1];
+            if (columnConfig.format && typeof cell.value === 'number') {
+              cell.numFmt = columnConfig.format;
+            }
+            // Estilo Data
+            applyStylesToCell(cell, getStyle({ type: 'data' }));
+          });
+          currentRowIndex++;
         }
       });
     });
 
-    const worksheet = xlsx.utils.aoa_to_sheet(rows);
-    worksheet['!merges'] = merges;
-    worksheet['!cols'] = columns.map((column) => ({ wch: column.width }));
-
-    const sheetRows: xlsx.RowInfo[] = [];
-    for (let i = 0; i < rows.length; i++) {
-      let height = 17;
-      if (i < this.HEADER_HEIGHT || mainBlockIndexes.includes(i + 1)) {
-        height = 28;
+    // 8. Ajuste de Altura das Linhas (!rows no original)
+    worksheet.eachRow((row, rowNumber) => {
+      let height = 17; // Padrão
+      if (rowNumber <= this.HEADER_HEIGHT) {
+        height = 28; // Cabeçalho
+      } else if (mainBlockRowIndexes.includes(rowNumber)) {
+        height = 28; // Bloco Principal
       }
-      sheetRows.push({ hpt: height });
-    }
-    worksheet['!rows'] = sheetRows;
-
-    xlsx.utils.book_append_sheet(workbook, worksheet, 'Medição');
-    xlsx.writeFile(workbook, fileName);
+      row.height = height; // ExcelJS usa 'points' para altura por padrão
+    });
   }
 
-  private static addBlockHeaderRow(
-    columns: ColumnConfig[],
-    rows: unknown[][],
-    title: string,
-    totals: ReportTotals,
-    type: 'mainBlock' | 'subBlock',
-    merges: xlsx.Range[],
-    rowIndex: number,
+  private static async downloadWorkbook(
+    workbook: ExcelJS.Workbook,
+    fileName: string,
   ) {
-    const baseStyle =
-      type === 'mainBlock' ? this.STYLES.mainBlock : this.STYLES.subBlock;
-    const titleStyle =
-      type === 'mainBlock'
-        ? this.STYLES.mainBlockTitle
-        : this.STYLES.subBlockTitle;
-    let textColsCount = 0;
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
 
-    const row = columns.map((column, index) => {
-      if (column.totalKey) {
-        return {
-          v: totals[column.totalKey as keyof ReportTotals] ?? 0,
-          t: 'n',
-          s: baseStyle,
-          z: column.format,
+    const url = window.URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = fileName;
+
+    document.body.appendChild(anchor);
+    anchor.click();
+
+    document.body.removeChild(anchor);
+    window.URL.revokeObjectURL(url);
+  }
+}
+
+interface CommonResumeParams {
+  data: MeasurementReportResume;
+  worksheet: ExcelJS.Worksheet;
+}
+
+function addEmptyRow(worksheet: ExcelJS.Worksheet, rowSpan: number = 1) {
+  for (let i = 0; i < rowSpan; i++) {
+    worksheet.addRow([]);
+  }
+}
+
+function createReadjustmentTable({ data, worksheet }: CommonResumeParams) {
+  const EMPTY_CELL = '';
+
+  const INITIAL_MERGE_CELL = 6;
+  const MERGE_ROWS_COUNT = 3;
+
+  function mergeRows(rows: ExcelJS.Row[]) {
+    const firstMergeRow = rows[1];
+    const lastMergeRow = rows[rows.length - 1];
+    Array.from({ length: MERGE_ROWS_COUNT })
+      .map((_, index) => INITIAL_MERGE_CELL + index)
+      .forEach((row) => {
+        worksheet.mergeCells(
+          `${firstMergeRow.getCell(row).address}:${lastMergeRow.getCell(row).address}`,
+        );
+      });
+  }
+
+  function applyCurrencyFormat(row: ExcelJS.Row, isMergedCell: boolean) {
+    const currencyCells = [3, 5];
+
+    if (isMergedCell) {
+      currencyCells.push(7, 8);
+    }
+
+    currencyCells.forEach((cell) => {
+      row.getCell(cell).numFmt = CURRENCY_FORMAT;
+    });
+  }
+
+  function applyCellBorders(
+    row: ExcelJS.Row,
+    shouldApplyTop: boolean,
+    shouldApplyBottom: boolean,
+  ) {
+    const borderCells = [1, 2, 3, 4, 5, 6, 7, 8];
+    const customBorderCells = [3, 5, 6, 7, 8];
+
+    borderCells.forEach((cell) => {
+      let borderStyles: Partial<ExcelJS.Borders> = {
+        ...(shouldApplyTop && { top: { style: 'medium' } }),
+        ...(shouldApplyBottom && { bottom: { style: 'medium' } }),
+      };
+
+      row.getCell(cell).border = borderStyles;
+
+      if (customBorderCells.includes(cell)) {
+        borderStyles = {
+          ...borderStyles,
+          right: {
+            style: 'medium',
+          },
+        };
+
+        row.getCell(cell).border = borderStyles;
+      }
+    });
+  }
+
+  const firstRow = worksheet.addRow([
+    'VALOR MEDIDO',
+    EMPTY_CELL,
+    data.totalMeasurementValueWithPenalties,
+    'VALOR APROVADO',
+    data.totalMeasurementValueWithPenalties,
+    'ÍNDICE DE REAJUSTE',
+    'ITENS SEM REAJUSTE',
+    'ITENS SEM RETENÇÃO',
+  ]);
+  const secondRow = worksheet.addRow([
+    'REAJUSTE',
+    EMPTY_CELL,
+    data.readjustValue,
+    'REAJUSTE',
+    data.readjustValue,
+    data.adjustmentIndex + '%',
+    EMPTY_CELL,
+    EMPTY_CELL,
+  ]);
+  const thirdRow = worksheet.addRow([
+    'DEVOLUÇÃO REAJUSTE SERVIÇOS',
+    EMPTY_CELL,
+    EMPTY_CELL,
+    'DEVOLUÇÃO REAJUSTE SERVIÇOS',
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+  ]);
+  const fourthRow = worksheet.addRow([
+    ...Array.from({ length: 8 }).map(() => EMPTY_CELL),
+  ]);
+  const fifthRow = worksheet.addRow([
+    'VALOR MEDIDO REAJUSTADO',
+    EMPTY_CELL,
+    data.readjustedMeasurementValue,
+    'VALOR MEDIDO REAJUSTADO',
+    data.readjustedMeasurementValue,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+  ]);
+
+  const rows = [firstRow, secondRow, thirdRow, fourthRow, fifthRow];
+
+  mergeRows(rows);
+
+  rows.forEach((row, index) => {
+    const shouldMergeCells = index === 1;
+    applyCurrencyFormat(row, shouldMergeCells);
+
+    const shouldApplyTop = index === 0;
+    const shouldApplyBottom = index === rows.length - 1;
+    applyCellBorders(row, shouldApplyTop, shouldApplyBottom);
+  });
+}
+
+function createDivisionForEachCompanyTable({
+  data,
+  worksheet,
+}: CommonResumeParams) {
+  const EMPTY_CELL = '';
+  const ENGECORPS_PERCENTAGE = 0.4;
+  const SENNER_PERCENTAGE = 0.4;
+  const GPO_PERCENTAGE = 0.2;
+
+  const headerRow = worksheet.addRow([
+    'EMPRESA',
+    EMPTY_CELL,
+    'VALOR NOTA FISCAL',
+    'RETENÇÃO',
+    'DESCONTO VALOR NÃO RETIDO',
+    'VALOR FINAL DA RETENÇÃO',
+    'DESCONTO VL NÃO REAJUSTÁVEL',
+    'PAGAMENTO',
+  ]);
+  const engecorpsRow = worksheet.addRow([
+    'ENGECORPS',
+    EMPTY_CELL,
+    data.readjustedMeasurementValue * ENGECORPS_PERCENTAGE,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    data.readjustedMeasurementValue * ENGECORPS_PERCENTAGE,
+  ]);
+  const sennerRow = worksheet.addRow([
+    'SENNER',
+    EMPTY_CELL,
+    data.readjustedMeasurementValue * SENNER_PERCENTAGE,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    data.readjustedMeasurementValue * SENNER_PERCENTAGE,
+  ]);
+  const gpoRow = worksheet.addRow([
+    'GPO',
+    EMPTY_CELL,
+    data.readjustedMeasurementValue * GPO_PERCENTAGE,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    data.readjustedMeasurementValue * GPO_PERCENTAGE,
+  ]);
+  const totalRow = worksheet.addRow([
+    'TOTAL',
+    EMPTY_CELL,
+    data.readjustedMeasurementValue,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    data.readjustedMeasurementValue,
+  ]);
+
+  const rows = [headerRow, engecorpsRow, sennerRow, gpoRow, totalRow];
+  rows.forEach((row, index) => {
+    const isHeaderRow = index === 0;
+    const isTotalRow = index === rows.length - 1;
+
+    if (!isHeaderRow) {
+      applyCurrencyFormat(row);
+    }
+
+    applyCellStyles(row, isHeaderRow, isTotalRow);
+  });
+
+  function applyCurrencyFormat(row: ExcelJS.Row) {
+    const currencyCells = [3, 4, 5, 6, 7, 8];
+
+    currencyCells.forEach((cell) => {
+      row.getCell(cell).numFmt = CURRENCY_FORMAT;
+    });
+  }
+
+  function applyCellStyles(
+    row: ExcelJS.Row,
+    isHeaderRow: boolean,
+    isTotalRow: boolean,
+  ) {
+    const isHighlightRow = isHeaderRow || isTotalRow;
+    const boldCellIndex = [3, 6];
+
+    row.eachCell({ includeEmpty: true }, (cell, columnNumber) => {
+      cell.style = {
+        ...cell.style,
+        font: { bold: isHighlightRow || boldCellIndex.includes(columnNumber) },
+        ...(isHighlightRow && {
+          fill: {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF91D2FF' },
+          },
+          border: {
+            ...(isHeaderRow && { top: { style: 'thin' } }),
+            ...(isTotalRow && { bottom: { style: 'thin' } }),
+          },
+          alignment: {
+            ...(columnNumber !== 1 && !isTotalRow && { horizontal: 'center' }),
+          },
+        }),
+      };
+    });
+  }
+}
+
+interface CreateSummaryTable {
+  data: MeasurementReportLine;
+  worksheet: ExcelJS.Worksheet;
+}
+
+function createSummaryTable({ data, worksheet }: CreateSummaryTable) {
+  const EMPTY_CELL = '';
+
+  const columns = [
+    'Partida',
+    'Preço Unitário',
+    'Meses',
+    'Valor Total do Contrato',
+    'Multa 7.1',
+    'Multa 7.2',
+    'Total Medido',
+    'Saldo',
+  ];
+  const currencyColumnIndexes = [2, 4, 5, 6, 7, 8];
+
+  const headerRow = worksheet.addRow([
+    'CONTRATO',
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+    EMPTY_CELL,
+  ]);
+
+  const baseStyle: Partial<ExcelJS.Style> = {
+    font: { bold: true },
+    alignment: {
+      horizontal: 'center',
+      vertical: 'middle',
+    },
+  };
+
+  worksheet.mergeCells(
+    `${headerRow.getCell(1).address}:${headerRow.getCell(columns.length).address}`,
+  );
+  headerRow.getCell(1).style = {
+    ...baseStyle,
+    fill: {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF91D2FF' },
+    },
+  };
+
+  const titleRow = worksheet.addRow(columns);
+  titleRow.eachCell({ includeEmpty: true }, (cell) => {
+    cell.style = {
+      ...baseStyle,
+      fill: {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFDAE9F8' },
+      },
+    };
+  });
+
+  function isAnemicBlock(child: ReportBlockDTO): child is ReportSubBlockDTO {
+    return 'lines' in child;
+  }
+
+  data.blocks.forEach((block) => {
+    const mainBlockRow = worksheet.addRow([
+      block.title,
+      block.totals.unitPriceContractual,
+      block.totals.amountMonthsContractual,
+      block.totals.contractualAmountContractual,
+      block.totals.amountFineExperience,
+      block.totals.amountFineMobilization,
+      block.totals.actualTotalPaid,
+      block.totals.balance,
+    ]);
+    mainBlockRow.height = 44;
+    mainBlockRow.eachCell({ includeEmpty: true }, (cell, columnIndex) => {
+      const cellStyle: Partial<ExcelJS.Style> = {
+        ...baseStyle,
+        alignment: {
+          horizontal: 'right',
+          vertical: 'middle',
+        },
+        fill: {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE8E8E8' },
+        },
+        border: {
+          top: { style: 'medium' },
+        },
+      };
+
+      if (columnIndex === 1) {
+        cellStyle.alignment = {
+          horizontal: 'center',
+          vertical: 'middle',
+          wrapText: true,
         };
       }
 
-      textColsCount = index + 1;
+      if (currencyColumnIndexes.includes(columnIndex)) {
+        cellStyle.numFmt = CURRENCY_FORMAT;
+      }
 
-      return {
-        v: index === 0 ? title : '',
-        s: titleStyle,
-      };
+      if (columnIndex === columns.length) {
+        cellStyle.border = {
+          ...cellStyle.border,
+          right: { style: 'medium' },
+        };
+      }
+
+      cell.style = cellStyle;
     });
 
-    rows.push(row);
+    if (isAnemicBlock(block)) {
+      const [anemicBlockPrefix] = block.lines[0].code.split(' ');
+      const anemicBlockRow = worksheet.addRow([
+        anemicBlockPrefix,
+        block.totals.unitPriceContractual,
+        block.totals.amountMonthsContractual,
+        block.totals.contractualAmountContractual,
+        block.totals.amountFineExperience,
+        block.totals.amountFineMobilization,
+        block.totals.actualTotalPaid,
+        block.totals.balance,
+      ]);
 
-    if (textColsCount > 1) {
-      merges.push({
-        s: {
-          r: rowIndex,
-          c: 0,
-        },
-        e: {
-          r: rowIndex,
-          c: textColsCount - 1,
-        },
+      anemicBlockRow.eachCell({ includeEmpty: true }, (cell, columnIndex) => {
+        if (currencyColumnIndexes.includes(columnIndex)) {
+          cell.numFmt = CURRENCY_FORMAT;
+        }
+
+        if (columnIndex === columns.length) {
+          cell.border = {
+            right: { style: 'medium' },
+          };
+        }
+      });
+    } else if (!!block.subBlocks) {
+      block.subBlocks.forEach((subBlock) => {
+        const [subBlockPrefix] = subBlock.lines[0].code.split(' ');
+        const subBlockRow = worksheet.addRow([
+          subBlockPrefix,
+          subBlock.totals.unitPriceContractual,
+          subBlock.totals.amountMonthsContractual,
+          subBlock.totals.contractualAmountContractual,
+          subBlock.totals.amountFineExperience,
+          subBlock.totals.amountFineMobilization,
+          subBlock.totals.actualTotalPaid,
+          subBlock.totals.balance,
+        ]);
+
+        subBlockRow.eachCell({ includeEmpty: true }, (cell, columnIndex) => {
+          if (currencyColumnIndexes.includes(columnIndex)) {
+            cell.numFmt = CURRENCY_FORMAT;
+          }
+
+          if (columnIndex === columns.length) {
+            cell.border = {
+              right: { style: 'medium' },
+            };
+          }
+        });
       });
     }
-  }
+  });
+
+  const totalRow = worksheet.addRow([
+    'Total Geral',
+    data.totals.unitPriceContractual,
+    data.totals.amountMonthsContractual,
+    data.totals.contractualAmountContractual,
+    data.totals.amountFineExperience,
+    data.totals.amountFineMobilization,
+    data.totals.actualTotalPaid,
+    data.totals.balance,
+  ]);
+
+  totalRow.eachCell({ includeEmpty: true }, (cell, columnIndex) => {
+    const cellStyle: Partial<ExcelJS.Style> = {
+      ...baseStyle,
+      alignment: {
+        horizontal: columnIndex === 1 ? 'left' : 'right',
+      },
+      fill: {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF91D2FF' },
+      },
+      border: {
+        top: { style: 'medium' },
+        bottom: { style: 'medium' },
+      },
+    };
+
+    if (currencyColumnIndexes.includes(columnIndex)) {
+      cellStyle.numFmt = CURRENCY_FORMAT;
+    }
+
+    if (columnIndex === columns.length) {
+      cellStyle.border = {
+        ...cellStyle.border,
+        right: { style: 'medium' },
+      };
+    }
+
+    cell.style = cellStyle;
+  });
 }

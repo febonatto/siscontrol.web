@@ -2,6 +2,26 @@ import { api } from '@/configs/httpClient';
 import { useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 
+export interface MeasurementReportResume {
+  measurementReportNumber: number;
+  initialMeasurementPeriod: Date;
+  finalMeasurementPeriod: Date;
+  totalMeasurementValueWithOnlyExperiencePenalty: number;
+  totalFineExperienceValue: number;
+  totalFineMobilizationValue: number;
+  deliverableQuality: number;
+  projectDeliverableQualityReview: number;
+  deliverableTimelinessQuality: number;
+  constructionSupervisionQuality: number;
+  dfoQuality: number;
+  operationalSafetyQuality: number;
+  serviceQuality: number;
+  totalMeasurementValueWithPenalties: number;
+  adjustmentIndex: number;
+  readjustValue: number;
+  readjustedMeasurementValue: number;
+}
+
 export interface MeasurementReportDetailLine {
   code: string;
   service: string;
@@ -12,9 +32,10 @@ export interface MeasurementReportDetailLine {
   unitPrice: number;
   amountMonths: number;
   contractualAmount: number;
-  smeUnitPrice: number;
-  smeAmountMonths: number;
-  smeContractualAmount: number;
+  smeNumber: Nullable<number>;
+  unitPriceContractual: number;
+  amountMonthsContractual: number;
+  contractualAmountContractual: number;
   previousAmountWorkedMonths: number;
   previousTotalPaid: number;
   requiredExperienceTime: number;
@@ -33,19 +54,17 @@ export interface MeasurementReportDetailLine {
   balance: number;
 }
 
-export interface ReportTotals {
+export interface ReportTotal {
+  unitPriceContractual: number;
+  amountMonthsContractual: number;
+  contractualAmountContractual: number;
   unitPrice: number;
   amountMonths: number;
   contractualAmount: number;
-  smeUnitPrice: number;
-  smeAmountMonths: number;
-  smeContractualAmount: number;
   previousAmountWorkedMonths: number;
   previousTotalPaid: number;
-  proportionDaysWorked: number;
-  percentualFineExperience: number;
   amountFineExperience: number;
-  percentualFineMobilization: number;
+  measurementReportValue: number;
   amountFineMobilization: number;
   actualMeasurementReportValue: number;
   actualAmountWorkedMonths: number;
@@ -56,21 +75,31 @@ export interface ReportTotals {
 
 export interface ReportSubBlockDTO {
   title: string;
-  totals: ReportTotals;
+  totals: ReportTotal;
   lines: MeasurementReportDetailLine[];
 }
 
-export interface MeasurementReportDetailLineExcel {
+export interface ReportBlockDTO {
   title: string;
-  totals: ReportTotals;
+  totals: ReportTotal;
   lines?: MeasurementReportDetailLine[];
   subBlocks?: ReportSubBlockDTO[];
 }
 
+export interface MeasurementReportLine {
+  totals: ReportTotal;
+  blocks: ReportBlockDTO[];
+}
+
+export interface MeasurementReportExcel {
+  measurementReportResume: MeasurementReportResume;
+  measurementReportDetails: MeasurementReportLine;
+}
+
 async function generateMeasurementReport(
   measurementReportNumber: number,
-): Promise<MeasurementReportDetailLineExcel[]> {
-  const { data } = await api.get<MeasurementReportDetailLineExcel[]>(
+): Promise<MeasurementReportExcel> {
+  const { data } = await api.get<MeasurementReportExcel>(
     `/bm/generate-report/${measurementReportNumber}`,
   );
 
@@ -81,9 +110,9 @@ export function useGenerateMeasurementReport(
   measurementReportNumber: Nullable<number>,
 ) {
   return useQuery<
-    MeasurementReportDetailLineExcel[],
+    MeasurementReportExcel,
     AxiosError,
-    MeasurementReportDetailLineExcel[],
+    MeasurementReportExcel,
     [string, number]
   >({
     queryKey: ['generate-measurement-report', measurementReportNumber!],

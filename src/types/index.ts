@@ -155,14 +155,12 @@ export interface PartidaOrcamentaria {
   quantidadeMeses: number;
   precoUnitario: string;
   montanteContratual: number;
-  criadoEm: Date;
-  atualizadoEm: Date;
+  dataSME: DateISO | null;
+  numeroSME: number | null;
 
   aeroporto: Aeroporto;
   pessoaPartida: PessoaPartida[];
-  currentMobilizedPessoa: PessoaPartida | null;
-
-  pessoa: Pessoa;
+  currentMobilizedPerson: PessoaPartida | null;
 }
 
 export interface BmResumo {

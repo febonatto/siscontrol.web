@@ -39,6 +39,8 @@ export function BoletimMedicao() {
     showFetchingResumos,
     showEmptyResumos,
     isDeletingResumo,
+    isFetching,
+    measurementReportNumber,
     shouldShowDeleteModal,
     handleResumoBeingDeleted,
     handleConfirmDelete,
@@ -157,8 +159,14 @@ export function BoletimMedicao() {
                           onClick={() =>
                             handleGenerateMeasurementReport(bmResumo.nrBm)
                           }
+                          disabled={isFetching}
                         >
-                          <DownloadIcon className="size-4" />
+                          {isFetching &&
+                          bmResumo.nrBm === measurementReportNumber ? (
+                            <LoaderIcon size={16} className="animate-spin" />
+                          ) : (
+                            <DownloadIcon className="size-4" />
+                          )}
                         </Button>
 
                         <Link
