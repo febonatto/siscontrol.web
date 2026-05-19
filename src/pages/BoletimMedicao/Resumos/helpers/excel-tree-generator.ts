@@ -4,6 +4,7 @@ import {
   MeasurementReportResume,
   ReportBlockDTO,
   ReportSubBlockDTO,
+  ReportTotal,
 } from '../../api/useGenerateMeasurementReport';
 
 import ExcelJS from 'exceljs';
@@ -71,7 +72,11 @@ export class ExcelTreeGenerator {
     });
     addEmptyRow(worksheet, 3);
 
-    createSummaryTable({ data: measurementReportDetails, worksheet });
+    createSummaryTable({
+      data: measurementReportDetails,
+      worksheet,
+      variant: 'contrato',
+    });
   }
 
   private static async generateDetailsWorksheet(
@@ -657,13 +662,52 @@ function createDivisionForEachCompanyTable({
   }
 }
 
+type SummaryTableVariant = 'contrato';
+
+interface SummaryTableFieldMapping {
+  unitPrice: keyof ReportTotal;
+  amountMonths: keyof ReportTotal;
+  contractAmount: keyof ReportTotal;
+}
+
+const SUMMARY_TABLE_CONFIG: Record<
+  SummaryTableVariant,
+  { title: string; fields: SummaryTableFieldMapping }
+> = {
+  contrato: {
+    title: 'CONTRATO',
+    fields: {
+      unitPrice: 'unitPriceContractual',
+      amountMonths: 'amountMonthsContractual',
+      contractAmount: 'contractualAmountContractual',
+    },
+  },
+};
+
 interface CreateSummaryTable {
   data: MeasurementReportLine;
   worksheet: ExcelJS.Worksheet;
+  variant: SummaryTableVariant;
 }
 
-function createSummaryTable({ data, worksheet }: CreateSummaryTable) {
+function getSummaryRowValues(
+  totals: ReportTotal,
+  fields: SummaryTableFieldMapping,
+): (string | number | null)[] {
+  return [
+    totals[fields.unitPrice],
+    totals[fields.amountMonths],
+    totals[fields.contractAmount],
+    totals.accumulatedAmountFineExperience,
+    totals.accumulatedAmountFineMobilization,
+    totals.actualTotalPaid,
+    totals.balance,
+  ];
+}
+
+function createSummaryTable({ data, worksheet, variant }: CreateSummaryTable) {
   const EMPTY_CELL = '';
+  const { title, fields } = SUMMARY_TABLE_CONFIG[variant];
 
   const columns = [
     'Partida',
@@ -678,7 +722,7 @@ function createSummaryTable({ data, worksheet }: CreateSummaryTable) {
   const currencyColumnIndexes = [2, 4, 5, 6, 7, 8];
 
   const headerRow = worksheet.addRow([
-    'CONTRATO',
+    title,
     EMPTY_CELL,
     EMPTY_CELL,
     EMPTY_CELL,
@@ -727,13 +771,7 @@ function createSummaryTable({ data, worksheet }: CreateSummaryTable) {
   data.blocks.forEach((block) => {
     const mainBlockRow = worksheet.addRow([
       block.title,
-      block.totals.unitPriceContractual,
-      block.totals.amountMonthsContractual,
-      block.totals.contractualAmountContractual,
-      block.totals.amountFineExperience,
-      block.totals.amountFineMobilization,
-      block.totals.actualTotalPaid,
-      block.totals.balance,
+      ...getSummaryRowValues(block.totals, fields),
     ]);
     mainBlockRow.height = 44;
     mainBlockRow.eachCell({ includeEmpty: true }, (cell, columnIndex) => {
@@ -779,13 +817,7 @@ function createSummaryTable({ data, worksheet }: CreateSummaryTable) {
       const [anemicBlockPrefix] = block.lines[0].code.split(' ');
       const anemicBlockRow = worksheet.addRow([
         anemicBlockPrefix,
-        block.totals.unitPriceContractual,
-        block.totals.amountMonthsContractual,
-        block.totals.contractualAmountContractual,
-        block.totals.amountFineExperience,
-        block.totals.amountFineMobilization,
-        block.totals.actualTotalPaid,
-        block.totals.balance,
+        ...getSummaryRowValues(block.totals, fields),
       ]);
 
       anemicBlockRow.eachCell({ includeEmpty: true }, (cell, columnIndex) => {
@@ -804,13 +836,7 @@ function createSummaryTable({ data, worksheet }: CreateSummaryTable) {
         const [subBlockPrefix] = subBlock.lines[0].code.split(' ');
         const subBlockRow = worksheet.addRow([
           subBlockPrefix,
-          subBlock.totals.unitPriceContractual,
-          subBlock.totals.amountMonthsContractual,
-          subBlock.totals.contractualAmountContractual,
-          subBlock.totals.amountFineExperience,
-          subBlock.totals.amountFineMobilization,
-          subBlock.totals.actualTotalPaid,
-          subBlock.totals.balance,
+          ...getSummaryRowValues(subBlock.totals, fields),
         ]);
 
         subBlockRow.eachCell({ includeEmpty: true }, (cell, columnIndex) => {
@@ -830,13 +856,7 @@ function createSummaryTable({ data, worksheet }: CreateSummaryTable) {
 
   const totalRow = worksheet.addRow([
     'Total Geral',
-    data.totals.unitPriceContractual,
-    data.totals.amountMonthsContractual,
-    data.totals.contractualAmountContractual,
-    data.totals.amountFineExperience,
-    data.totals.amountFineMobilization,
-    data.totals.actualTotalPaid,
-    data.totals.balance,
+    ...getSummaryRowValues(data.totals, fields),
   ]);
 
   totalRow.eachCell({ includeEmpty: true }, (cell, columnIndex) => {
