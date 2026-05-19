@@ -55,17 +55,19 @@ export interface MeasurementReportDetailLine {
 }
 
 export interface ReportTotal {
-  unitPriceContractual: number;
-  amountMonthsContractual: number;
-  contractualAmountContractual: number;
-  unitPrice: number;
-  amountMonths: number;
-  contractualAmount: number;
+  unitPriceContractual: Nullable<number>;
+  amountMonthsContractual: Nullable<number>;
+  contractualAmountContractual: Nullable<number>;
+  unitPrice: Nullable<number>;
+  amountMonths: Nullable<number>;
+  contractualAmount: Nullable<number>;
   previousAmountWorkedMonths: number;
   previousTotalPaid: number;
   amountFineExperience: number;
+  accumulatedAmountFineExperience: number;
   measurementReportValue: number;
   amountFineMobilization: number;
+  accumulatedAmountFineMobilization: number;
   actualMeasurementReportValue: number;
   actualAmountWorkedMonths: number;
   actualTotalPaid: number;
