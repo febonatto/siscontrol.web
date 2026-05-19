@@ -77,6 +77,12 @@ export class ExcelTreeGenerator {
       worksheet,
       variant: 'contrato',
     });
+    addEmptyRow(worksheet, 1);
+    createSummaryTable({
+      data: measurementReportDetails,
+      worksheet,
+      variant: 'sme',
+    });
   }
 
   private static async generateDetailsWorksheet(
@@ -662,7 +668,7 @@ function createDivisionForEachCompanyTable({
   }
 }
 
-type SummaryTableVariant = 'contrato';
+type SummaryTableVariant = 'contrato' | 'sme';
 
 interface SummaryTableFieldMapping {
   unitPrice: keyof ReportTotal;
@@ -680,6 +686,14 @@ const SUMMARY_TABLE_CONFIG: Record<
       unitPrice: 'unitPriceContractual',
       amountMonths: 'amountMonthsContractual',
       contractAmount: 'contractualAmountContractual',
+    },
+  },
+  sme: {
+    title: 'SME',
+    fields: {
+      unitPrice: 'unitPrice',
+      amountMonths: 'amountMonths',
+      contractAmount: 'contractualAmount',
     },
   },
 };
